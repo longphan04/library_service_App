@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'book_card.dart';
 
-class ListBooks extends StatelessWidget {
-  final int itemCount;
-  final bool? isCartPage;
-  const ListBooks({
-    super.key,
-    required this.itemCount,
-    this.isCartPage = false,
-  });
+import 'category_card.dart';
+
+class ListCategories extends StatelessWidget {
+  const ListCategories({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,18 +13,18 @@ class ListBooks extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.525,
+        childAspectRatio: 0.8,
         crossAxisSpacing: 20,
         mainAxisSpacing: 10,
       ),
-      itemCount: itemCount,
+      itemCount: 10,
       itemBuilder: (context, index) {
-        return BookCard(
-          title: 'Tiêu đề sách',
-          author: 'Tác giả',
-          category: 'Thể loại',
-          availableCount: 3,
-          isCartPage: isCartPage,
+        return CategoryCard(
+          categoryName: 'Danh mục $index',
+          bookCount: 10 + index,
+          onTap: () {
+            // Handle category tap
+          },
         );
       },
     );

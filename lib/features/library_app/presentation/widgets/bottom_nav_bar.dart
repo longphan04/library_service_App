@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 /// Reusable bottom navigation bar widget
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -16,7 +18,7 @@ class BottomNavBar extends StatelessWidget {
     return Container(
       height: 75,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.navBackground,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -32,7 +34,7 @@ class BottomNavBar extends StatelessWidget {
           const SizedBox(width: 50),
           _buildNavItem(Icons.grid_view_outlined, 1),
           const SizedBox(width: 50),
-          _buildNavItem(Icons.shopping_cart_outlined, 2),
+          _buildNavItem(Icons.book_outlined, 2),
           const SizedBox(width: 50),
           _buildNavItem(Icons.person_outline, 3),
         ],
@@ -47,7 +49,7 @@ class BottomNavBar extends StatelessWidget {
       child: Icon(
         icon,
         size: 32,
-        color: isSelected ? Colors.blue : Colors.grey[600],
+        color: isSelected ? AppColors.icon : AppColors.subText,
       ),
     );
   }

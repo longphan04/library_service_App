@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../widgets/auth_button.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../widgets/my_button.dart';
 import '../home/main_page.dart';
 import 'register_page.dart';
 
@@ -13,7 +15,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
 
   String? _emailError;
   String? _passwordError;
@@ -27,36 +28,10 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  bool _validateEmail(String email) {
-    return email.isNotEmpty && email.contains('@');
-  }
-
-  bool _validatePassword(String password) {
-    return password.isNotEmpty && password.length >= 6;
-  }
-
-  /*   void _handleSignIn() {
-    setState(() {
-      _emailError = _validateEmail(_emailController.text)
-          ? null
-          : 'Please enter a valid email';
-      _passwordError = _validatePassword(_passwordController.text)
-          ? null
-          : 'Password must be at least 6 characters';
-    });
-
-    if (_emailError == null && _passwordError == null) {
-      // Handle sign in
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Sign in successful!')));
-    }
-  } */
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -64,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.navBackground,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -73,24 +48,24 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.menu_book, color: Colors.blue, size: 32),
+                      SvgPicture.asset('images/logo.svg', height: 32),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Sign In',
+                            'Đăng nhập',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: AppColors.titleText,
                             ),
                           ),
                           Text(
-                            'Access your library account',
+                            'Truy cập tài khoản thư viện của bạn',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: AppColors.subText,
                             ),
                           ),
                         ],
@@ -108,14 +83,14 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          color: AppColors.bodyText,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: 'Nhập email của bạn',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: Icon(
                             Icons.email_outlined,
@@ -139,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Password',
+                        'Mật khẩu',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -151,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          hintText: 'Enter your password',
+                          hintText: 'Nhập mật khẩu của bạn',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: Icon(
                             Icons.lock_outline,
@@ -184,53 +159,31 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
 
                   // Remember me and Forgot password
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(
-                              value: _rememberMe,
-                              onChanged: (value) {
-                                setState(() {
-                                  _rememberMe = value ?? false;
-                                });
-                              },
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Remember me',
-                            style: TextStyle(fontSize: 14, color: Colors.black),
-                          ),
-                        ],
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // Handle forgot password
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // Handle forgot password
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Forgot password?',
-                          style: TextStyle(fontSize: 14, color: Colors.blue),
+                      child: Text(
+                        'Quên mật khẩu?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.buttonSecondaryText,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 24),
 
                   // Sign In button
-                  AuthButton(
-                    text: 'Sign In',
+                  MyButton(
+                    text: 'Đăng nhập',
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -245,8 +198,11 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        "Chưa có tài khoản? ",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.subText,
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
@@ -263,25 +219,15 @@ class _LoginPageState extends State<LoginPage> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
-                          'Sign Up',
+                          'Đăng ký ngay',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.blue,
+                            color: AppColors.buttonSecondaryText,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Divider and demo credentials
-                  Divider(color: Colors.grey[300], thickness: 1),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Demo credentials: Any email and password will work',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),

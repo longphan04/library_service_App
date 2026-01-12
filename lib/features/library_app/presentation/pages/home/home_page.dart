@@ -14,17 +14,20 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SectionHeader(title: 'Hot List', color: Colors.orange),
+            SectionHeader(title: 'Hot Trend', color: Colors.orange),
             const HotList(),
             SectionHeader(
-              title: 'Newest Books',
+              title: 'Mới nhất',
               color: Colors.green,
               showViewAll: true,
               onViewAll: () {
                 // Handle view all action
               },
             ),
-            const ListBooks(),
+            const ListBooks(itemCount: 4),
+            const SizedBox(height: 10),
+            SectionHeader(title: 'Đề xuất', color: Colors.blue),
+            const ListBooks(itemCount: 20),
           ],
         ),
       ),

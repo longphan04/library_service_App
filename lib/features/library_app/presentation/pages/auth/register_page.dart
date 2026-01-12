@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../widgets/auth_button.dart';
+import 'package:flutter_svg/svg.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../widgets/my_button.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -47,17 +49,17 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() {
       _emailError = _validateEmail(_emailController.text)
           ? null
-          : 'Please enter a valid email';
+          : 'Email không hợp lệ';
       _phoneError = _validatePhone(_phoneController.text)
           ? null
-          : 'Phone number must be at least 10 digits';
+          : 'Số điện thoại phải có ít nhất 10 chữ số';
       _passwordError = _validatePassword(_passwordController.text)
           ? null
-          : 'Password must be at least 6 characters';
+          : 'Mật khẩu phải có ít nhất 6 ký tự';
       _confirmPasswordError =
           _passwordController.text == _confirmPasswordController.text
           ? null
-          : 'Passwords do not match';
+          : 'Mật khẩu không khớp';
     });
 
     if (_emailError == null &&
@@ -67,7 +69,7 @@ class _RegisterPageState extends State<RegisterPage> {
       // Handle sign up
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Sign up successful!')));
+      ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công!')));
     }
   }
 
@@ -91,13 +93,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.menu_book, color: Colors.blue, size: 32),
+                      SvgPicture.asset('images/logo.svg', height: 32),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Sign Up',
+                            'Đăng ký',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -105,7 +107,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                           Text(
-                            'Create your library account',
+                            'Tạo tài khoản thư viện của bạn',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -133,7 +135,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: 'Nhập email của bạn',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: Icon(
                             Icons.email_outlined,
@@ -157,7 +159,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Phone Number',
+                        'Số điện thoại',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -169,7 +171,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
-                          hintText: 'Enter your phone number',
+                          hintText: 'Nhập số điện thoại của bạn',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: Icon(
                             Icons.phone_outlined,
@@ -193,7 +195,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Password',
+                        'Mật khẩu',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -211,12 +213,12 @@ class _RegisterPageState extends State<RegisterPage> {
                               _confirmPasswordError =
                                   value == _confirmPasswordController.text
                                   ? null
-                                  : 'Passwords do not match';
+                                  : 'Mật khẩu không khớp';
                             });
                           }
                         },
                         decoration: InputDecoration(
-                          hintText: 'Enter your password',
+                          hintText: 'Nhập mật khẩu của bạn',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: Icon(
                             Icons.lock_outline,
@@ -253,7 +255,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Confirm Password',
+                        'Xác nhận mật khẩu',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -269,11 +271,11 @@ class _RegisterPageState extends State<RegisterPage> {
                             _confirmPasswordError =
                                 _passwordController.text == value
                                 ? null
-                                : 'Passwords do not match';
+                                : 'Mật khẩu không khớp';
                           });
                         },
                         decoration: InputDecoration(
-                          hintText: 'Confirm your password',
+                          hintText: 'Xác nhận mật khẩu của bạn',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           prefixIcon: Icon(
                             Icons.lock_outline,
@@ -307,7 +309,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 24),
 
                   // Sign Up button
-                  AuthButton(text: 'Sign Up', onPressed: _handleSignUp),
+                  MyButton(text: 'Đăng ký', onPressed: _handleSignUp),
                   const SizedBox(height: 24),
 
                   // Sign In link
@@ -315,7 +317,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        'Đã có tài khoản? ',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       TextButton(
@@ -328,25 +330,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
-                          'Sign In',
+                          'Đăng nhập ngay',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.blue,
+                            color: AppColors.buttonSecondaryText,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Divider and demo credentials
-                  Divider(color: Colors.grey[300], thickness: 1),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Demo credentials: Any email and password will work',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),

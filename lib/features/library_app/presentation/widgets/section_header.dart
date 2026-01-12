@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 /// Reusable section header with optional "View all" link
 class SectionHeader extends StatelessWidget {
   final String title;
@@ -38,6 +40,7 @@ class SectionHeader extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: AppColors.titleText,
                 ),
               ),
             ],
@@ -46,9 +49,9 @@ class SectionHeader extends StatelessWidget {
             GestureDetector(
               onTap: onViewAll,
               child: Text(
-                'View all',
+                'Xem tất cả',
                 style: const TextStyle(
-                  color: Colors.blue,
+                  color: AppColors.buttonSecondaryText,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/app_colors.dart';
+
 /// Reusable category card widget for Categories screen
 class CategoryCard extends StatelessWidget {
   final String categoryName;
@@ -25,15 +27,17 @@ class CategoryCard extends StatelessWidget {
         height: height,
         width: width,
         child: Card(
+          color: AppColors.sectionBackground,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Category Image Placeholder
               Expanded(
+                flex: 2,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: AppColors.primaryButton,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(8),
                       topRight: Radius.circular(8),
@@ -43,10 +47,11 @@ class CategoryCard extends StatelessWidget {
                 ),
               ),
               // Category Info
-              Padding(
-                padding: const EdgeInsets.all(12),
+              Expanded(
+                flex: 1,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       categoryName,
@@ -54,13 +59,13 @@ class CategoryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$bookCount books',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      '$bookCount cuốn sách',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),

@@ -1,0 +1,23 @@
+🔐 Auth & RBAC (5 entities)
+user.dart - Tài khoản đăng nhập
+profile.dart - Thông tin cá nhân
+role.dart - Vai trò (ADMIN/STAFF/MEMBER)
+auth_token.dart - Token xác nhận email/reset password
+refresh_token.dart - JWT refresh token
+
+📚 Book Catalog (4 entities)
+category.dart - Danh mục sách
+author.dart - Tác giả
+publisher.dart - Nhà xuất bản
+shelf.dart - Kệ sách (vị trí vật lý)
+
+📖 Book Management (3 entities)
+book.dart - Đầu sách (catalog level)
+book_copy.dart - Từng cuốn sách vật lý
+book_image.dart - Hình ảnh sách
+
+📝 Borrow System (4 entities)
+book_hold.dart - Giỏ mượn tạm
+borrow_ticket.dart - Phiếu mượn
+borrow_item.dart - Chi tiết phiếu mượn
+ticket_fine.dart - Phạt quá hạn + ZaloPay
