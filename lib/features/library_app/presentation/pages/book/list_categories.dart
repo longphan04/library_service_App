@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../domain/entities/category.dart';
 import 'category_card.dart';
 
 class ListCategories extends StatelessWidget {
-  const ListCategories({super.key});
+  final List<Category> categories;
+  const ListCategories({super.key, required this.categories});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +19,13 @@ class ListCategories extends StatelessWidget {
         crossAxisSpacing: 20,
         mainAxisSpacing: 10,
       ),
-      itemCount: 10,
+      itemCount: categories.length,
       itemBuilder: (context, index) {
+        final category = categories[index];
         return CategoryCard(
-          categoryName: 'Danh mục $index',
-          bookCount: 10 + index,
+          categoryName: category.name,
+          image: category.image,
+          bookCount: category.bookCount,
           onTap: () {
             // Handle category tap
           },

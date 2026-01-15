@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../widgets/my_button.dart';
-import '../home/main_page.dart';
 import 'register_page.dart';
+import '../../bloc/auth/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -182,14 +183,59 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 24),
 
                   // Sign In button
-                  MyButton(
-                    text: 'Đăng nhập',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MainPage()),
-                      );
+                  BlocListener<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (state is LoginFailure) {
+                        // show server message under password field and SnackBar
+                        setState(() {
+                          _emailError = null;
+                          _passwordError = state.message;
+                        });
+                      }
                     },
+                    child: BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        return MyButton(
+                          text: state is LoginLoading
+                              ? 'Đang đăng nhập...'
+                              : 'Đăng nhập',
+                          onPressed: state is LoginLoading
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _emailError = null;
+                                    _passwordError = null;
+                                  });
+
+                                  final email = _emailController.text.trim();
+                                  final password = _passwordController.text;
+
+                                  if (email.isEmpty || password.isEmpty) {
+                                    setState(() {
+                                      _emailError = email.isEmpty
+                                          ? 'Email không được để trống'
+                                          : null;
+                                      _passwordError = password.isEmpty
+                                          ? 'Mật khẩu không được để trống'
+                                          : null;
+                                    });
+                                    return;
+                                  }
+
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    context.read<AuthBloc>().add(
+                                      LoginEvent(
+                                        email: email,
+                                        password: password,
+                                      ),
+                                    );
+                                  });
+                                },
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 24),
 

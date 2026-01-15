@@ -5,6 +5,7 @@ import '../../../../../core/theme/app_colors.dart';
 /// Reusable category card widget for Categories screen
 class CategoryCard extends StatelessWidget {
   final String categoryName;
+  final String? image;
   final int bookCount;
   final VoidCallback onTap;
   final double? height;
@@ -12,6 +13,7 @@ class CategoryCard extends StatelessWidget {
 
   const CategoryCard({
     required this.categoryName,
+    this.image,
     required this.bookCount,
     required this.onTap,
     this.height,
@@ -32,19 +34,58 @@ class CategoryCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Category Image Placeholder
+              // Category Image
               Expanded(
                 flex: 2,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryButton,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                  ),
-                  width: double.infinity,
-                ),
+                child: image != null && image!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
+                        ),
+                        child: Image.network(
+                          image!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: AppColors.primaryButton,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppColors.primaryButton,
+                              width: double.infinity,
+                              height: double.infinity,
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryButton,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        width: double.infinity,
+                        child: const Icon(
+                          Icons.category,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
               ),
               // Category Info
               Expanded(

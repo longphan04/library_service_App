@@ -1,0 +1,101 @@
+import 'package:dio/dio.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../../core/utils/error_handler.dart';
+import '../../../domain/entities/login_request.dart';
+import '../../../domain/entities/login_response.dart';
+import '../../../domain/entities/register_request.dart';
+import '../../../domain/entities/user.dart';
+import '../../../domain/usecases/auth_usecase.dart';
+
+part 'auth_event.dart';
+part 'auth_state.dart';
+
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final LoginUseCase loginUseCase;
+  final RegisterUseCase registerUseCase;
+  final IsLoggedInUseCase isLoggedInUseCase;
+  final LogoutUseCase logoutUseCase;
+  final GetUserDataUseCase getUserDataUseCase;
+
+  AuthBloc({
+    required this.loginUseCase,
+    required this.registerUseCase,
+    required this.isLoggedInUseCase,
+    required this.logoutUseCase,
+    required this.getUserDataUseCase,
+  }) : super(AuthInitial()) {
+    on<LoginEvent>(_onLogin);
+    on<RegisterEvent>(_onRegister);
+    on<CheckLoginStatusEvent>(_onCheckLoginStatus);
+    on<LogoutEvent>(_onLogout);
+  }
+
+  Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
+    emit(LoginLoading());
+    try {
+      final response = await loginUseCase(
+        LoginRequest(email: event.email, password: event.password),
+      );
+      if (response.user.roles.contains('STAFF')) {
+        await logoutUseCase();
+        emit(const LoginFailure('Không được phép đăng nhập.', null));
+        return;
+      }
+      emit(Authenticated(user: response.user));
+    } on DioException catch (e) {
+      final message = ErrorHandler.getErrorMessage(e);
+      emit(LoginFailure(message, e));
+    } catch (e) {
+      emit(LoginFailure('Lỗi không xác định', e));
+    }
+  }
+
+  Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
+    emit(RegisterLoading());
+    try {
+      await registerUseCase(
+        RegisterRequest(
+          email: event.email,
+          password: event.password,
+          fullName: event.fullName,
+        ),
+      );
+      emit(RegisterSuccess());
+    } on DioException catch (e) {
+      final message = ErrorHandler.getErrorMessage(e);
+      emit(RegisterFailure(message, e));
+    } catch (e) {
+      emit(RegisterFailure('Lỗi không xác định', e));
+    }
+  }
+
+  Future<void> _onCheckLoginStatus(
+    CheckLoginStatusEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      final isLoggedIn = await isLoggedInUseCase();
+      if (isLoggedIn) {
+        final userData = await getUserDataUseCase();
+        emit(Authenticated(user: userData));
+      } else {
+        emit(Unauthenticated());
+      }
+    } catch (e) {
+      emit(Unauthenticated());
+    }
+  }
+
+  Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      await logoutUseCase();
+      emit(LogoutSuccess());
+      emit(Unauthenticated());
+    } catch (e) {
+      emit(LoginFailure('Lỗi đăng xuất', e));
+    }
+  }
+}

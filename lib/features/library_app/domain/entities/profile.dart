@@ -1,12 +1,13 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 
-/// User profile entity
-/// Corresponds to `profiles` table in database
 class Profile extends Equatable {
   final int profileId;
   final int userId;
   final String fullName;
   final String? phone;
+  final File? image;
   final String? avatarUrl;
   final String? address;
   final DateTime? dateOfBirth;
@@ -18,6 +19,7 @@ class Profile extends Equatable {
     required this.userId,
     required this.fullName,
     this.phone,
+    this.image,
     this.avatarUrl,
     this.address,
     this.dateOfBirth,
@@ -31,6 +33,7 @@ class Profile extends Equatable {
     userId,
     fullName,
     phone,
+    image,
     avatarUrl,
     address,
     dateOfBirth,

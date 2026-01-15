@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../bloc/auth/auth_bloc.dart';
 import '../../widgets/my_button.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -11,13 +13,13 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String? _fullNameError;
   String? _emailError;
-  String? _phoneError;
   String? _passwordError;
   String? _confirmPasswordError;
 
@@ -26,57 +28,17 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
+    _fullNameController.dispose();
     _emailController.dispose();
     _confirmPasswordController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  bool _validateEmail(String email) {
-    return email.isNotEmpty && email.contains('@');
-  }
-
-  bool _validatePhone(String phone) {
-    return phone.isNotEmpty && phone.length >= 10;
-  }
-
-  bool _validatePassword(String password) {
-    return password.isNotEmpty && password.length >= 6;
-  }
-
-  void _handleSignUp() {
-    setState(() {
-      _emailError = _validateEmail(_emailController.text)
-          ? null
-          : 'Email không hợp lệ';
-      _phoneError = _validatePhone(_phoneController.text)
-          ? null
-          : 'Số điện thoại phải có ít nhất 10 chữ số';
-      _passwordError = _validatePassword(_passwordController.text)
-          ? null
-          : 'Mật khẩu phải có ít nhất 6 ký tự';
-      _confirmPasswordError =
-          _passwordController.text == _confirmPasswordController.text
-          ? null
-          : 'Mật khẩu không khớp';
-    });
-
-    if (_emailError == null &&
-        _phoneError == null &&
-        _passwordError == null &&
-        _confirmPasswordError == null) {
-      // Handle sign up
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công!')));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -84,7 +46,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Container(
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.navBackground,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -119,6 +81,41 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 40),
 
+                  // Full name field
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Họ và tên',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _fullNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Nhập họ và tên của bạn',
+                          hintStyle: TextStyle(color: Colors.grey[400]),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: Colors.grey[400],
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          errorText: _fullNameError,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
                   // Email field
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,42 +145,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderSide: BorderSide.none,
                           ),
                           errorText: _emailError,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Phone field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Số điện thoại',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          hintText: 'Nhập số điện thoại của bạn',
-                          hintStyle: TextStyle(color: Colors.grey[400]),
-                          prefixIcon: Icon(
-                            Icons.phone_outlined,
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          errorText: _phoneError,
                         ),
                       ),
                     ],
@@ -309,7 +270,71 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 24),
 
                   // Sign Up button
-                  MyButton(text: 'Đăng ký', onPressed: _handleSignUp),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      return MyButton(
+                        text: state is AuthLoading
+                            ? 'Đang đăng ký...'
+                            : 'Đăng ký',
+                        onPressed: state is AuthLoading
+                            ? null
+                            : () {
+                                setState(() {
+                                  _fullNameError = null;
+                                  _emailError = null;
+                                  _passwordError = null;
+                                  _confirmPasswordError = null;
+                                });
+
+                                bool isValid = true;
+                                if (_fullNameController.text.trim().isEmpty) {
+                                  setState(() {
+                                    _fullNameError = 'Vui lòng nhập họ và tên';
+                                  });
+                                  isValid = false;
+                                }
+                                if (_emailController.text.trim().isEmpty) {
+                                  setState(() {
+                                    _emailError = 'Vui lòng nhập email';
+                                  });
+                                  isValid = false;
+                                }
+                                if (_passwordController.text.isEmpty) {
+                                  setState(() {
+                                    _passwordError = 'Vui lòng nhập mật khẩu';
+                                  });
+                                  isValid = false;
+                                }
+                                if (_confirmPasswordController.text.isEmpty) {
+                                  setState(() {
+                                    _confirmPasswordError =
+                                        'Vui lòng xác nhận mật khẩu';
+                                  });
+                                  isValid = false;
+                                } else if (_passwordController.text !=
+                                    _confirmPasswordController.text) {
+                                  setState(() {
+                                    _confirmPasswordError =
+                                        'Mật khẩu không khớp';
+                                  });
+                                  isValid = false;
+                                }
+
+                                if (!isValid) {
+                                  return;
+                                }
+
+                                context.read<AuthBloc>().add(
+                                  RegisterEvent(
+                                    fullName: _fullNameController.text.trim(),
+                                    email: _emailController.text.trim(),
+                                    password: _passwordController.text,
+                                  ),
+                                );
+                              },
+                      );
+                    },
+                  ),
                   const SizedBox(height: 24),
 
                   // Sign In link
