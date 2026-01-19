@@ -9,6 +9,7 @@ import '../datasources/local/auth_local_datasource.dart';
 import '../datasources/remote/auth_remote_datasource.dart';
 import '../models/login_request_model.dart';
 import '../models/register_request_model.dart';
+import '../models/verify_email_otp_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource remoteDatasource;
@@ -44,6 +45,16 @@ class AuthRepositoryImpl implements AuthRepository {
         fullName: request.fullName,
       );
       await remoteDatasource.register(requestModel);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> verifyOtp(String email, String otp) async {
+    try {
+      final requestModel = VerifyEmailOtpModel(email: email, otp: otp);
+      await remoteDatasource.verifyOtp(requestModel);
     } on DioException {
       rethrow;
     }

@@ -23,7 +23,6 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
           type: DioExceptionType.badResponse,
         );
       }
-      print('response data: ${response.data}');
       final categories = (response.data as List)
           .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
           .toList();

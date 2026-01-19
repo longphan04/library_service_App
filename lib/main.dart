@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/service_locator.dart';
 import 'core/theme/app_colors.dart';
 import 'features/library_app/presentation/bloc/auth/auth_bloc.dart';
+import 'features/library_app/presentation/bloc/book/book_bloc.dart';
+import 'features/library_app/presentation/bloc/borrow/borrow_bloc.dart';
 import 'features/library_app/presentation/bloc/category/category_bloc.dart';
 import 'features/library_app/presentation/bloc/profile/profile_bloc.dart';
 import 'features/library_app/presentation/pages/admin/admin_page.dart';
@@ -34,6 +36,11 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               getIt<CategoryBloc>()..add(LoadCategoriesEvent()),
         ),
+        BlocProvider<BookBloc>(create: (context) => getIt<BookBloc>()),
+        BlocProvider<BookDetailBloc>(
+          create: (context) => getIt<BookDetailBloc>(),
+        ),
+        BlocProvider<BorrowBloc>(create: (context) => getIt<BorrowBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

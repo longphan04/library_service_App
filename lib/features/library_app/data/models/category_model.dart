@@ -15,13 +15,13 @@ class CategoryModel {
   @JsonKey(name: 'image')
   final String? image;
   @JsonKey(name: 'bookCount')
-  final int bookCount;
+  final int? bookCount;
 
   const CategoryModel({
     required this.categoryId,
     required this.name,
     this.image,
-    required this.bookCount,
+    this.bookCount,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) =>
@@ -33,7 +33,7 @@ class CategoryModel {
       categoryId: categoryId,
       name: name,
       image: '${DioConfig.baseUrl}/public/${image ?? ''}',
-      bookCount: bookCount,
+      bookCount: bookCount ?? 0,
     );
   }
 }

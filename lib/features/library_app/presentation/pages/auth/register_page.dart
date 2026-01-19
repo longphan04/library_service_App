@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../widgets/my_button.dart';
+import 'verify_email_otp_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -270,13 +271,33 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 24),
 
                   // Sign Up button
-                  BlocBuilder<AuthBloc, AuthState>(
+                  BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (state is RegisterSuccess) {
+                        // Navigate to OTP verification page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VerifyEmailOtpPage(
+                              email: _emailController.text.trim(),
+                            ),
+                          ),
+                        );
+                      } else if (state is RegisterFailure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
                     builder: (context, state) {
                       return MyButton(
-                        text: state is AuthLoading
+                        text: state is RegisterLoading
                             ? 'Đang đăng ký...'
                             : 'Đăng ký',
-                        onPressed: state is AuthLoading
+                        onPressed: state is RegisterLoading
                             ? null
                             : () {
                                 setState(() {

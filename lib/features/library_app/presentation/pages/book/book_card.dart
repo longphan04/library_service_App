@@ -1,21 +1,25 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/utils/time_formatter.dart';
+import '../../../domain/entities/book.dart';
+import '../../../domain/entities/book_hold.dart';
 import 'detail_page.dart';
 
 class BookCard extends StatefulWidget {
-  final String title;
-  final String author;
-  final String category;
-  final int availableCount;
-  final bool? isCartPage;
+  final Book book;
+  final BookHold? bookHold;
+  final bool isShelfMode;
+  final bool isSelected;
+  final void Function(bool)? onSelectionChanged;
 
   const BookCard({
     super.key,
-    required this.title,
-    required this.author,
-    required this.category,
-    required this.availableCount,
-    this.isCartPage = false,
+    required this.book,
+    this.bookHold,
+    this.isShelfMode = false,
+    this.isSelected = false,
+    this.onSelectionChanged,
   });
 
   @override
@@ -23,9 +27,9 @@ class BookCard extends StatefulWidget {
 }
 
 class _BookCardState extends State<BookCard> {
-  bool isChecked = false;
-  int quantity = 1;
-
+  String get remainingTime => widget.bookHold != null
+      ? TimeFormatter.formatRemainingTime(widget.bookHold!.expiresAt)
+      : '';
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -34,10 +38,8 @@ class _BookCardState extends State<BookCard> {
           context,
           MaterialPageRoute(
             builder: (context) => DetailPage(
-              title: widget.title,
-              author: widget.author,
-              category: widget.category,
-              availableCount: widget.availableCount,
+              bookId: widget.book.bookId,
+              initialCoverUrl: widget.book.coverUrl ?? '',
             ),
           ),
         );
@@ -52,7 +54,7 @@ class _BookCardState extends State<BookCard> {
           children: [
             // Image section
             Expanded(
-              flex: widget.isCartPage == true ? 5 : 2,
+              flex: widget.isShelfMode ? 5 : 2,
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -62,11 +64,40 @@ class _BookCardState extends State<BookCard> {
                     topRight: Radius.circular(10),
                   ),
                 ),
+                child: widget.book.coverUrl != null
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                        ),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.book.coverUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.buttonPrimaryText,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Icons.book,
+                            color: AppColors.buttonPrimaryText,
+                            size: 40,
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.book,
+                          color: AppColors.buttonPrimaryText,
+                          size: 40,
+                        ),
+                      ),
               ),
             ),
             // Info section
             Expanded(
-              flex: widget.isCartPage == true ? 4 : 1,
+              flex: widget.isShelfMode ? 4 : 1,
               child: Padding(
                 padding: const EdgeInsets.all(5),
                 child: Column(
@@ -74,7 +105,7 @@ class _BookCardState extends State<BookCard> {
                   children: [
                     // Title
                     Text(
-                      widget.title,
+                      widget.book.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -84,7 +115,14 @@ class _BookCardState extends State<BookCard> {
                     ),
                     // Author
                     Text(
-                      widget.author,
+                      widget.book.authors != null &&
+                              widget.book.authors!.isNotEmpty
+                          ? widget.book.authors![0].name +
+                                (widget.book.authors!.length > 1
+                                    ? ' + ${widget.book.authors!.length - 1}'
+                                    : '')
+                          : 'Không rõ',
+
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -100,55 +138,69 @@ class _BookCardState extends State<BookCard> {
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(
-                        widget.category,
+                        widget.book.categories != null &&
+                                widget.book.categories!.isNotEmpty
+                            ? widget.book.categories![0].name +
+                                  (widget.book.categories!.length > 1
+                                      ? ' + ${widget.book.categories!.length - 1}'
+                                      : '')
+                            : 'Không rõ',
                         style: const TextStyle(
                           fontSize: 10,
                           color: AppColors.buttonPrimaryText,
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
-                    if (widget.isCartPage == false) Spacer(),
+                    const SizedBox(height: 10),
+                    if (!widget.isShelfMode) const Spacer(),
                     // Available count
                     Align(
-                      alignment: widget.isCartPage == false
+                      alignment: !widget.isShelfMode
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                       child: Text(
-                        'Còn ${widget.availableCount} cuốn',
+                        widget.bookHold?.copyNote ?? '',
                         style: TextStyle(
                           fontSize: 14,
-                          color: (widget.availableCount > 0)
-                              ? Colors.green
-                              : Colors.red,
+                          color: AppColors.subText,
                         ),
                       ),
                     ),
-                    if (widget.isCartPage == true) ...[
-                      Spacer(),
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: Checkbox(
-                          checkColor: AppColors.sectionBackground,
-                          activeColor: AppColors.primaryButton,
 
-                          value: isChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              isChecked = value ?? false;
-                            });
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
+                    if (widget.isShelfMode) ...[
+                      const Spacer(),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: Checkbox(
+                              checkColor: AppColors.sectionBackground,
+                              activeColor: AppColors.primaryButton,
+                              value: widget.isSelected,
+                              onChanged: (value) {
+                                widget.onSelectionChanged?.call(value ?? false);
+                              },
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              side: BorderSide(
+                                color: AppColors.primaryButton,
+                                width: 1,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
                           ),
-                          side: BorderSide(
-                            color: AppColors.primaryButton,
-                            width: 1,
+                          const Spacer(),
+                          Text(
+                            remainingTime,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 14,
+                            ),
                           ),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
+                        ],
                       ),
                     ],
                   ],

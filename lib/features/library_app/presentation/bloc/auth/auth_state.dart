@@ -24,6 +24,11 @@ class RegisterLoading extends AuthState {
   List<Object?> get props => [];
 }
 
+class VerifyOtpLoading extends AuthState {
+  @override
+  List<Object?> get props => [];
+}
+
 class LoginSuccess extends AuthState {
   final LoginResponse response;
   const LoginSuccess(this.response);
@@ -50,6 +55,20 @@ class RegisterFailure extends AuthState {
   final String message;
   final dynamic error;
   const RegisterFailure(this.message, this.error);
+
+  @override
+  List<Object?> get props => [message, error];
+}
+
+class VerifyOtpSuccess extends AuthState {
+  @override
+  List<Object?> get props => [];
+}
+
+class VerifyOtpFailure extends AuthState {
+  final String message;
+  final dynamic error;
+  const VerifyOtpFailure(this.message, this.error);
 
   @override
   List<Object?> get props => [message, error];

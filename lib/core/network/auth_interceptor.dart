@@ -25,8 +25,6 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
 
   void _log(String message) {
     dev.log('[AuthInterceptor] $message', name: 'AUTH');
-    // ignore: avoid_print
-    print('[AuthInterceptor] $message');
   }
 
   Dio get _tokenDio {
@@ -70,6 +68,20 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
   }
 
   @override
+  Future<void> onResponse(
+    Response response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    _log(
+      'Response [${response.requestOptions.method}] ${response.requestOptions.path} - Status: ${response.statusCode}',
+    );
+    if (response.statusCode != null && response.statusCode! >= 400) {
+      _log('  Response data: ${response.data}');
+    }
+    return super.onResponse(response, handler);
+  }
+
+  @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
@@ -81,12 +93,16 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
     final isRefreshCall = options.path.contains('/auth/refresh');
 
     _log('Error [${options.method}] ${options.path} - Status: $statusCode');
+    _log('  Error type: ${err.type}');
+    _log('  Error message: ${err.message}');
     _log(
       '  hasRetried: $hasRetried, skipRefresh: $skipRefresh, isRefreshCall: $isRefreshCall',
     );
 
     if (err.response?.data != null) {
       _log('  Response data: ${err.response?.data}');
+    } else if (err.error != null) {
+      _log('  Error detail: ${err.error}');
     }
 
     final shouldRefresh =

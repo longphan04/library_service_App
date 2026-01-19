@@ -8,18 +8,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/library_app/data/datasources/local/auth_local_datasource.dart';
 import '../../features/library_app/data/datasources/remote/auth_remote_datasource.dart';
+import '../../features/library_app/data/datasources/remote/book_remote_datasource.dart';
+import '../../features/library_app/data/datasources/remote/borrow_remote_datasource.dart';
 import '../../features/library_app/data/datasources/remote/category_remote_datasource.dart';
 import '../../features/library_app/data/datasources/remote/profile_remote_datasource.dart';
 import '../../features/library_app/data/repositories/auth_repository_impl.dart';
+import '../../features/library_app/data/repositories/book_repository_impl.dart';
+import '../../features/library_app/data/repositories/borrow_repository_impl.dart';
 import '../../features/library_app/data/repositories/category_repository_impl.dart';
 import '../../features/library_app/data/repositories/profile_repository_impl.dart';
 import '../../features/library_app/domain/repositories/auth_repository.dart';
+import '../../features/library_app/domain/repositories/book_repository.dart';
+import '../../features/library_app/domain/repositories/borrow_repository.dart';
 import '../../features/library_app/domain/repositories/category_repository.dart';
 import '../../features/library_app/domain/repositories/profile_repository.dart';
 import '../../features/library_app/domain/usecases/auth_usecase.dart';
+import '../../features/library_app/domain/usecases/book_usecase.dart';
+import '../../features/library_app/domain/usecases/borrow_usecase.dart';
 import '../../features/library_app/domain/usecases/category_usecase.dart';
 import '../../features/library_app/domain/usecases/profile_usecase.dart';
 import '../../features/library_app/presentation/bloc/auth/auth_bloc.dart';
+import '../../features/library_app/presentation/bloc/book/book_bloc.dart';
+import '../../features/library_app/presentation/bloc/borrow/borrow_bloc.dart';
 import '../../features/library_app/presentation/bloc/category/category_bloc.dart';
 import '../../features/library_app/presentation/bloc/profile/profile_bloc.dart';
 import '../config/dio_config.dart';
@@ -60,6 +70,12 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<CategoryRemoteDataSource>(
     CategoryRemoteDataSourceImpl(dio: getIt<Dio>()),
   );
+  getIt.registerSingleton<BookRemoteDatasource>(
+    BookRemoteDatasourceImpl(dio: getIt<Dio>()),
+  );
+  getIt.registerSingleton<BorrowRemoteDatasource>(
+    BorrowRemoteDatasourceImpl(dio: getIt<Dio>()),
+  );
 
   // Datasources/local
   getIt.registerSingleton<AuthLocalDatasource>(
@@ -85,6 +101,12 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<CategoryRepository>(
     CategoryRepositoryImpl(remoteDataSource: getIt<CategoryRemoteDataSource>()),
   );
+  getIt.registerSingleton<BookRepository>(
+    BookRepositoryImpl(remoteDataSource: getIt<BookRemoteDatasource>()),
+  );
+  getIt.registerSingleton<BorrowRepository>(
+    BorrowRepositoryImpl(remoteDatasource: getIt<BorrowRemoteDatasource>()),
+  );
 
   // Dio Interceptor
   dio.interceptors.add(
@@ -107,6 +129,9 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<LogoutUseCase>(
     LogoutUseCase(getIt<AuthRepository>()),
   );
+  getIt.registerSingleton<VerifyOtpUseCase>(
+    VerifyOtpUseCase(getIt<AuthRepository>()),
+  );
   getIt.registerSingleton<IsLoggedInUseCase>(
     IsLoggedInUseCase(getIt<AuthRepository>()),
   );
@@ -127,11 +152,28 @@ Future<void> initializeDependencies() async {
     GetCategoriesUseCase(getIt<CategoryRepository>()),
   );
 
+  // UseCases/book
+  getIt.registerSingleton<GetBookDetailsUseCase>(
+    GetBookDetailsUseCase(getIt<BookRepository>()),
+  );
+  getIt.registerSingleton<GetAllBooksUseCase>(
+    GetAllBooksUseCase(getIt<BookRepository>()),
+  );
+
+  // UseCases/borrow
+  getIt.registerSingleton<GetBookHoldsUseCase>(
+    GetBookHoldsUseCase(getIt<BorrowRepository>()),
+  );
+  getIt.registerSingleton<AddBookHoldUseCase>(
+    AddBookHoldUseCase(getIt<BorrowRepository>()),
+  );
+
   // Blocs
   getIt.registerSingleton<AuthBloc>(
     AuthBloc(
       loginUseCase: getIt<LoginUseCase>(),
       registerUseCase: getIt<RegisterUseCase>(),
+      verifyOtpUseCase: getIt<VerifyOtpUseCase>(),
       isLoggedInUseCase: getIt<IsLoggedInUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
       getUserDataUseCase: getIt<GetUserDataUseCase>(),
@@ -146,5 +188,12 @@ Future<void> initializeDependencies() async {
   );
   getIt.registerSingleton<CategoryBloc>(
     CategoryBloc(getCategoriesUseCase: getIt<GetCategoriesUseCase>()),
+  );
+  getIt.registerSingleton<BookBloc>(BookBloc(getIt<GetAllBooksUseCase>()));
+  getIt.registerSingleton<BookDetailBloc>(
+    BookDetailBloc(getIt<GetBookDetailsUseCase>()),
+  );
+  getIt.registerSingleton<BorrowBloc>(
+    BorrowBloc(getIt<GetBookHoldsUseCase>(), getIt<AddBookHoldUseCase>()),
   );
 }

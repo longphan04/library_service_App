@@ -27,18 +27,14 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // Xử lý nút back: nếu đang có focus (bàn phím hiện) thì chỉ ẩn bàn phím
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        // Kiểm tra xem có đang focus vào text field không
         final currentFocus = FocusScope.of(context);
         if (currentFocus.hasFocus) {
-          // Đang hiện bàn phím -> chỉ ẩn bàn phím, không thoát app
           currentFocus.unfocus();
         } else {
-          // Không có bàn phím -> cho phép thoát app
           Navigator.of(context).pop();
         }
       },
@@ -51,16 +47,13 @@ class _MainPageState extends State<MainPage> {
         child: Scaffold(
           backgroundColor: AppColors.background,
           appBar: SearchAppBar(
-            onSearchChanged: (query) {
-              // TODO: Implement search
-            },
-            showBackButton: false, // Always show logo on main pages
+            onSearchChanged: (query) {},
+            showBackButton: false,
           ),
-          body: _pages[_currentIndex],
+          body: IndexedStack(index: _currentIndex, children: _pages),
           bottomNavigationBar: BottomNavBar(
             currentIndex: _currentIndex,
             onTap: (index) {
-              // Quan trọng: Unfocus khi chuyển tab để ẩn bàn phím
               FocusScope.of(context).unfocus();
               setState(() {
                 _currentIndex = index;

@@ -13,7 +13,8 @@ class DioConfig {
         connectTimeout: Duration(seconds: 10), // Connection timeout
         receiveTimeout: Duration(seconds: 10), // Receive timeout
         contentType: 'application/json', // Content type
-        validateStatus: (status) => status != null, // Accept all status codes
+        validateStatus: (status) =>
+            status != null && status >= 200 && status < 300, // Only 2xx success
       ),
     );
 

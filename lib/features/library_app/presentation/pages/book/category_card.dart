@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 
@@ -43,32 +44,23 @@ class CategoryCard extends StatelessWidget {
                           topLeft: Radius.circular(8),
                           topRight: Radius.circular(8),
                         ),
-                        child: Image.network(
-                          image!,
+                        child: CachedNetworkImage(
+                          imageUrl: image!,
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: double.infinity,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: AppColors.primaryButton,
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppColors.primaryButton,
-                              width: double.infinity,
-                              height: double.infinity,
-                              child: const Icon(
-                                Icons.image_not_supported,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            );
-                          },
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.error, color: Colors.red),
+                            ),
+                          ),
                         ),
                       )
                     : Container(

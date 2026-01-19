@@ -32,6 +32,16 @@ class RegisterEvent extends AuthEvent {
   List<Object?> get props => [email, password, fullName];
 }
 
+class VerifyOtpEvent extends AuthEvent {
+  final String email;
+  final String otp;
+
+  const VerifyOtpEvent({required this.email, required this.otp});
+
+  @override
+  List<Object?> get props => [email, otp];
+}
+
 class CheckLoginStatusEvent extends AuthEvent {
   const CheckLoginStatusEvent();
 

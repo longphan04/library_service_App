@@ -11,20 +11,7 @@ class AIChatPage extends StatefulWidget {
 class _AIChatPageState extends State<AIChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [
-    ChatMessage(
-      text:
-          'Hello bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla blabl ab ab lab lal ablab alb lab lab lab lab labla blab lab labl blab labl abl',
-      isUser: true,
-      sender: 'Bạn',
-    ),
-    ChatMessage(
-      text:
-          'Bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla',
-      isUser: false,
-      sender: 'AI',
-    ),
-  ];
+  final List<ChatMessage> _messages = [];
 
   @override
   void dispose() {
@@ -35,16 +22,30 @@ class _AIChatPageState extends State<AIChatPage> {
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
+    final userText = _messageController.text.trim();
 
     setState(() {
-      _messages.add(
-        ChatMessage(text: _messageController.text, isUser: true, sender: 'Bạn'),
-      );
+      _messages.add(ChatMessage(text: userText, isUser: true, sender: 'Bạn'));
       _messageController.clear();
+      // show AI typing indicator
+      _removeExistingTyping();
+      _messages.add(
+        ChatMessage(text: '', isUser: false, sender: 'AI', isTyping: true),
+      );
     });
 
     // Smoothly scroll to the newest message (anchored at bottom)
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
+    // Simulate AI response after short delay
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      final reply = _generateAIResponse(userText);
+      setState(() {
+        _removeExistingTyping();
+        _messages.add(ChatMessage(text: reply, isUser: false, sender: 'AI'));
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    });
   }
 
   void _scrollToBottom() {
@@ -72,6 +73,9 @@ class _AIChatPageState extends State<AIChatPage> {
             itemBuilder: (context, index) {
               // With reverse: true, display messages from newest to oldest
               final message = _messages[_messages.length - 1 - index];
+              if (message.isTyping) {
+                return _TypingBubble(isUser: false, sender: message.sender);
+              }
               return _MessageBubble(
                 message: message.text,
                 isUser: message.isUser,
@@ -148,14 +152,32 @@ class _AIChatPageState extends State<AIChatPage> {
       ),
     );
   }
+
+  void _removeExistingTyping() {
+    final typingIndex = _messages.lastIndexWhere((m) => m.isTyping);
+    if (typingIndex != -1) {
+      _messages.removeAt(typingIndex);
+    }
+  }
+
+  String _generateAIResponse(String userText) {
+    // Simple demo response. Replace with real AI call later.
+    return 'AI: Đã nhận câu hỏi của bạn: "$userText"';
+  }
 }
 
 class ChatMessage {
   final String text;
   final bool isUser;
   final String sender;
+  final bool isTyping;
 
-  ChatMessage({required this.text, required this.isUser, required this.sender});
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.sender,
+    this.isTyping = false,
+  });
 }
 
 class _MessageBubble extends StatelessWidget {
@@ -238,6 +260,136 @@ class _MessageBubble extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TypingBubble extends StatelessWidget {
+  final bool isUser;
+  final String sender;
+
+  const _TypingBubble({required this.isUser, required this.sender});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          if (!isUser)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Text(
+                sender,
+                style: TextStyle(
+                  color: AppColors.subText,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          Row(
+            mainAxisAlignment: isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isUser)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, right: 8),
+                  child: Text(
+                    sender,
+                    style: TextStyle(
+                      color: AppColors.subText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.sectionBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const TypingIndicator(),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TypingIndicator extends StatefulWidget {
+  final double dotSize;
+  final Color? dotColor;
+
+  const TypingIndicator({super.key, this.dotSize = 6, this.dotColor});
+
+  @override
+  State<TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildDot(Interval interval) {
+    final color = widget.dotColor ?? AppColors.bodyText;
+    final animation = CurvedAnimation(parent: _controller, curve: interval);
+    return ScaleTransition(
+      scale: Tween<double>(begin: 0.7, end: 1.0).animate(animation),
+      child: Opacity(
+        opacity: Tween<double>(begin: 0.6, end: 1.0).evaluate(animation),
+        child: Container(
+          width: widget.dotSize,
+          height: widget.dotSize,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildDot(const Interval(0.0, 0.33, curve: Curves.easeInOut)),
+        const SizedBox(width: 4),
+        _buildDot(const Interval(0.33, 0.66, curve: Curves.easeInOut)),
+        const SizedBox(width: 4),
+        _buildDot(const Interval(0.66, 1.0, curve: Curves.easeInOut)),
+      ],
     );
   }
 }

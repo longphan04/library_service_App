@@ -24,6 +24,16 @@ class RegisterUseCase {
   }
 }
 
+class VerifyOtpUseCase {
+  final AuthRepository repository;
+
+  VerifyOtpUseCase(this.repository);
+
+  Future<void> call(String email, String otp) async {
+    return await repository.verifyOtp(email, otp);
+  }
+}
+
 class GetAccessTokenUseCase {
   final AuthRepository repository;
 

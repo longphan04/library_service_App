@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../domain/entities/book_hold.dart';
 import '../../widgets/my_button.dart';
 import 'borrow_item.dart';
 
 class BorrowPage extends StatefulWidget {
-  const BorrowPage({super.key});
+  final List<BookHold> selectedHolds;
+
+  const BorrowPage({super.key, required this.selectedHolds});
 
   @override
   State<BorrowPage> createState() => _BorrowPageState();
@@ -17,8 +20,10 @@ class _BorrowPageState extends State<BorrowPage> {
 
   @override
   Widget build(BuildContext context) {
-    const totalItems = 5;
-    final itemsToShow = _isExpanded ? totalItems : _initialItemCount;
+    final totalItems = widget.selectedHolds.length;
+    final itemsToShow = _isExpanded
+        ? totalItems
+        : (totalItems < _initialItemCount ? totalItems : _initialItemCount);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -41,11 +46,24 @@ class _BorrowPageState extends State<BorrowPage> {
             children: [
               ListView.builder(
                 itemBuilder: (context, index) {
+                  final hold = widget.selectedHolds[index];
+                  final book = hold.book;
                   return BorrowItem(
-                    title: 'Tiêu đề sách $index',
-                    author: 'Tên tác giả',
-                    category: 'Thể loại',
-                    availableCount: 5,
+                    title: book.title,
+                    author: book.authors != null && book.authors!.isNotEmpty
+                        ? book.authors![0].name +
+                              (book.authors!.length > 1
+                                  ? ' + ${book.authors!.length - 1}'
+                                  : '')
+                        : 'Không rõ',
+                    category:
+                        book.categories != null && book.categories!.isNotEmpty
+                        ? book.categories![0].name +
+                              (book.categories!.length > 1
+                                  ? ' + ${book.categories!.length - 1}'
+                                  : '')
+                        : 'Không rõ',
+                    availableCount: book.availableCopies ?? 0,
                   );
                 },
                 itemCount: itemsToShow,
@@ -170,7 +188,7 @@ class _BorrowPageState extends State<BorrowPage> {
                       style: TextStyle(fontSize: 14, color: AppColors.subText),
                     ),
                     Text(
-                      '3 cuốn',
+                      '0 cuốn',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -183,7 +201,7 @@ class _BorrowPageState extends State<BorrowPage> {
                       style: TextStyle(fontSize: 14, color: AppColors.bodyText),
                     ),
                     Text(
-                      '05',
+                      '${widget.selectedHolds.length.toString().padLeft(2, '0')}',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

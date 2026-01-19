@@ -58,6 +58,7 @@ dependencies:
   # API Models
   json_serializable: ^6.7.1
   json_annotation: ^4.8.1
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:

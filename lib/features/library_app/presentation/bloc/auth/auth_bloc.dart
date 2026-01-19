@@ -15,6 +15,7 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
+  final VerifyOtpUseCase verifyOtpUseCase;
   final IsLoggedInUseCase isLoggedInUseCase;
   final LogoutUseCase logoutUseCase;
   final GetUserDataUseCase getUserDataUseCase;
@@ -22,12 +23,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({
     required this.loginUseCase,
     required this.registerUseCase,
+    required this.verifyOtpUseCase,
     required this.isLoggedInUseCase,
     required this.logoutUseCase,
     required this.getUserDataUseCase,
   }) : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
+    on<VerifyOtpEvent>(_onVerifyOtp);
     on<CheckLoginStatusEvent>(_onCheckLoginStatus);
     on<LogoutEvent>(_onLogout);
   }
@@ -68,6 +71,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(RegisterFailure(message, e));
     } catch (e) {
       emit(RegisterFailure('Lỗi không xác định', e));
+    }
+  }
+
+  Future<void> _onVerifyOtp(
+    VerifyOtpEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(VerifyOtpLoading());
+    try {
+      await verifyOtpUseCase(event.email, event.otp);
+      emit(VerifyOtpSuccess());
+    } on DioException catch (e) {
+      final message = ErrorHandler.getErrorMessage(e);
+      emit(VerifyOtpFailure(message, e));
+    } catch (e) {
+      emit(VerifyOtpFailure('Lỗi không xác định', e));
     }
   }
 

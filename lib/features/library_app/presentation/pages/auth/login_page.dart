@@ -186,7 +186,6 @@ class _LoginPageState extends State<LoginPage> {
                   BlocListener<AuthBloc, AuthState>(
                     listener: (context, state) {
                       if (state is LoginFailure) {
-                        // show server message under password field and SnackBar
                         setState(() {
                           _emailError = null;
                           _passwordError = state.message;

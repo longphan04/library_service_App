@@ -117,6 +117,18 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
 
+    final phone = _phoneController.text.trim();
+
+    if (phone.isNotEmpty) {
+      final digits = phone.replaceAll(RegExp(r'\D'), '');
+      if (digits.length != 10) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Số điện thoại phải có đúng 10 chữ số')),
+        );
+        return;
+      }
+    }
+
     final dobText = _dobController.text.trim();
     final dob = dobText.isNotEmpty ? DateTime.tryParse(dobText) : null;
 
