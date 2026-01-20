@@ -24,12 +24,14 @@ import '../../features/library_app/domain/repositories/category_repository.dart'
 import '../../features/library_app/domain/repositories/profile_repository.dart';
 import '../../features/library_app/domain/usecases/auth_usecase.dart';
 import '../../features/library_app/domain/usecases/book_usecase.dart';
+import '../../features/library_app/domain/usecases/borrow_ticket_usecase.dart';
 import '../../features/library_app/domain/usecases/borrow_usecase.dart';
 import '../../features/library_app/domain/usecases/category_usecase.dart';
 import '../../features/library_app/domain/usecases/profile_usecase.dart';
 import '../../features/library_app/presentation/bloc/auth/auth_bloc.dart';
 import '../../features/library_app/presentation/bloc/book/book_bloc.dart';
 import '../../features/library_app/presentation/bloc/borrow/borrow_bloc.dart';
+import '../../features/library_app/presentation/bloc/borrow/borrow_ticket_bloc.dart';
 import '../../features/library_app/presentation/bloc/category/category_bloc.dart';
 import '../../features/library_app/presentation/bloc/profile/profile_bloc.dart';
 import '../config/dio_config.dart';
@@ -167,6 +169,29 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<AddBookHoldUseCase>(
     AddBookHoldUseCase(getIt<BorrowRepository>()),
   );
+  getIt.registerSingleton<RemoveBookHoldUseCase>(
+    RemoveBookHoldUseCase(getIt<BorrowRepository>()),
+  );
+  getIt.registerSingleton<BorrowNowUseCase>(
+    BorrowNowUseCase(getIt<BorrowRepository>()),
+  );
+  getIt.registerSingleton<BorrowFromHoldsUseCase>(
+    BorrowFromHoldsUseCase(getIt<BorrowRepository>()),
+  );
+
+  // UseCases/borrow_ticket
+  getIt.registerSingleton<GetBorrowTicketsUseCase>(
+    GetBorrowTicketsUseCase(getIt<BorrowRepository>()),
+  );
+  getIt.registerSingleton<GetBorrowTicketDetailUseCase>(
+    GetBorrowTicketDetailUseCase(getIt<BorrowRepository>()),
+  );
+  getIt.registerSingleton<CancelBorrowTicketUseCase>(
+    CancelBorrowTicketUseCase(getIt<BorrowRepository>()),
+  );
+  getIt.registerSingleton<RenewBorrowTicketUseCase>(
+    RenewBorrowTicketUseCase(getIt<BorrowRepository>()),
+  );
 
   // Blocs
   getIt.registerSingleton<AuthBloc>(
@@ -194,6 +219,22 @@ Future<void> initializeDependencies() async {
     BookDetailBloc(getIt<GetBookDetailsUseCase>()),
   );
   getIt.registerSingleton<BorrowBloc>(
-    BorrowBloc(getIt<GetBookHoldsUseCase>(), getIt<AddBookHoldUseCase>()),
+    BorrowBloc(
+      getIt<GetBookHoldsUseCase>(),
+      getIt<AddBookHoldUseCase>(),
+      getIt<RemoveBookHoldUseCase>(),
+      getIt<BorrowNowUseCase>(),
+      getIt<BorrowFromHoldsUseCase>(),
+    ),
+  );
+  getIt.registerSingleton<BorrowTicketListBloc>(
+    BorrowTicketListBloc(
+      getIt<GetBorrowTicketsUseCase>(),
+      getIt<CancelBorrowTicketUseCase>(),
+      getIt<RenewBorrowTicketUseCase>(),
+    ),
+  );
+  getIt.registerSingleton<BorrowTicketBloc>(
+    BorrowTicketBloc(getIt<GetBorrowTicketDetailUseCase>()),
   );
 }

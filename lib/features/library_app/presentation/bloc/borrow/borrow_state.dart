@@ -53,3 +53,36 @@ class AddBookHoldFailure extends BorrowState {
   @override
   List<Object> get props => [message, error];
 }
+
+class RemoveBookHoldSuccess extends BorrowState {
+  @override
+  List<Object> get props => [];
+}
+
+class RemoveBookHoldFailure extends BorrowState {
+  final String message;
+  final Object error;
+
+  const RemoveBookHoldFailure(this.message, this.error);
+  @override
+  List<Object> get props => [message, error];
+}
+
+class BorrowLoading extends BorrowState {
+  @override
+  List<Object> get props => [];
+}
+
+class BorrowSuccess extends BorrowState {
+  @override
+  List<Object> get props => [];
+}
+
+class BorrowFailure extends BorrowState {
+  final String message;
+  final Object error;
+
+  const BorrowFailure(this.message, this.error);
+  @override
+  List<Object> get props => [message, error];
+}

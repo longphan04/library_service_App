@@ -6,6 +6,7 @@ import 'core/theme/app_colors.dart';
 import 'features/library_app/presentation/bloc/auth/auth_bloc.dart';
 import 'features/library_app/presentation/bloc/book/book_bloc.dart';
 import 'features/library_app/presentation/bloc/borrow/borrow_bloc.dart';
+import 'features/library_app/presentation/bloc/borrow/borrow_ticket_bloc.dart';
 import 'features/library_app/presentation/bloc/category/category_bloc.dart';
 import 'features/library_app/presentation/bloc/profile/profile_bloc.dart';
 import 'features/library_app/presentation/pages/admin/admin_page.dart';
@@ -22,6 +23,9 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +45,28 @@ class MyApp extends StatelessWidget {
           create: (context) => getIt<BookDetailBloc>(),
         ),
         BlocProvider<BorrowBloc>(create: (context) => getIt<BorrowBloc>()),
+        BlocProvider<BorrowTicketListBloc>(
+          create: (context) => getIt<BorrowTicketListBloc>(),
+        ),
+        BlocProvider<BorrowTicketBloc>(
+          create: (context) => getIt<BorrowTicketBloc>(),
+        ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(useMaterial3: true),
-        home: const AuthWrapper(),
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is Unauthenticated || state is LogoutSuccess) {
+            navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const AuthWrapper()),
+              (route) => false,
+            );
+          }
+        },
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(useMaterial3: true),
+          home: const AuthWrapper(),
+        ),
       ),
     );
   }

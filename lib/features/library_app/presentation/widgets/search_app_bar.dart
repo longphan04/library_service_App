@@ -4,18 +4,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../pages/messages/message_page.dart';
 
 class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
-  final String hintText;
-  final ValueChanged<String> onSearchChanged;
   final bool showBackButton;
-  final TextEditingController? controller;
 
-  const SearchAppBar({
-    this.hintText = 'Search Books...',
-    required this.onSearchChanged,
-    this.showBackButton = false,
-    this.controller,
-    super.key,
-  });
+  const SearchAppBar({this.showBackButton = false, super.key});
 
   @override
   State<SearchAppBar> createState() => _SearchAppBarState();
@@ -31,7 +22,7 @@ class _SearchAppBarState extends State<SearchAppBar> with RouteAware {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController();
+    _controller = TextEditingController();
     _focusNode = FocusNode();
 
     // Listen to focus changes
@@ -43,10 +34,7 @@ class _SearchAppBarState extends State<SearchAppBar> with RouteAware {
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
 
-    // Only dispose controller if we created it internally
-    if (widget.controller == null) {
-      _controller.dispose();
-    }
+    _controller.dispose();
     super.dispose();
   }
 
@@ -125,13 +113,12 @@ class _SearchAppBarState extends State<SearchAppBar> with RouteAware {
         textInputAction: TextInputAction.search,
         textAlignVertical: TextAlignVertical.center,
         onChanged: (value) {
-          widget.onSearchChanged(value);
           setState(() {});
         },
         onSubmitted: _onSearchSubmitted,
         onTapOutside: (_) => _unfocusSearchField(),
         decoration: InputDecoration(
-          hintText: widget.hintText,
+          hintText: 'Search Books...',
           hintStyle: TextStyle(color: AppColors.subText, fontSize: 14),
           border: InputBorder.none,
           isDense: true,

@@ -1,20 +1,27 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/utils/time_formatter.dart';
 
-/// Reusable borrow item widget for Borrow Page and Borrow History
 class BorrowItem extends StatefulWidget {
   final String title;
+  final String imageUrl;
   final String author;
   final String category;
-  final int availableCount;
+  final String? note;
+  final DateTime? expiresAt;
+  final VoidCallback? onDelete; // Thêm callback này
 
   const BorrowItem({
     super.key,
     required this.title,
+    required this.imageUrl,
     required this.author,
     required this.category,
-    required this.availableCount,
+    this.note,
+    this.expiresAt,
+    this.onDelete, // Thêm vào constructor
   });
 
   @override
@@ -22,9 +29,6 @@ class BorrowItem extends StatefulWidget {
 }
 
 class _BorrowItemState extends State<BorrowItem> {
-  bool isChecked = false;
-  int quantity = 1;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -37,82 +41,140 @@ class _BorrowItemState extends State<BorrowItem> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: Row(
+        child: Stack(
           children: [
-            // Book Image
-            Expanded(
-              flex: 1,
-              child: Container(
-                height: double.infinity,
-                decoration: BoxDecoration(color: AppColors.primaryButton),
+            if (widget.expiresAt != null)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Text(
+                  TimeFormatter.formatRemainingTime(widget.expiresAt!),
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            // Book Info and Quantity
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: AppColors.bodyText,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.author,
-                    style: TextStyle(fontSize: 12, color: AppColors.subText),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
+            Row(
+              children: [
+                // Book Image
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    height: double.infinity,
+                    decoration: const BoxDecoration(
                       color: AppColors.primaryButton,
-                      borderRadius: BorderRadius.circular(3),
                     ),
-                    child: Text(
-                      widget.category,
-                      style: const TextStyle(
-                        color: AppColors.buttonPrimaryText,
-                        fontSize: 10,
+                    child: ClipRRect(
+                      child: CachedNetworkImage(
+                        imageUrl: widget.imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        imageBuilder: (context, imageProvider) {
+                          return Image(
+                            image: imageProvider,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          );
+                        },
+                        placeholder: (context, url) => Container(
+                          width: double.infinity,
+                          height: 300,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: double.infinity,
+                          height: 300,
+                          color: AppColors.hover,
+                          child: Center(
+                            child: Icon(
+                              Icons.book,
+                              color: AppColors.buttonPrimaryText,
+                              size: 60,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Còn ${widget.availableCount} cuốn',
-                    style: TextStyle(fontSize: 12, color: Colors.green),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                InkWell(
-                  onTap: () {},
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red, width: 1),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.delete, color: Colors.red, size: 16),
-                    ),
+                ),
+                const SizedBox(width: 12),
+                // Book Info
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: AppColors.bodyText,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.author,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.subText,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryButton,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          widget.category,
+                          style: const TextStyle(
+                            color: AppColors.buttonPrimaryText,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      if (widget.note != null)
+                        Text(
+                          widget.note!,
+                          style: const TextStyle(color: AppColors.subText),
+                        ),
+                    ],
                   ),
                 ),
+                if (widget.onDelete != null)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      InkWell(
+                        onTap: widget.onDelete, // Gán callback xóa vào đây
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.red, width: 1),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ],

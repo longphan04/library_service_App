@@ -20,3 +20,33 @@ class AddBookHoldUseCase {
     return repository.addBookHold(holdId);
   }
 }
+
+class BorrowNowUseCase {
+  final BorrowRepository repository;
+
+  BorrowNowUseCase(this.repository);
+
+  Future<void> call(int bookId) {
+    return repository.borrowNow(bookId);
+  }
+}
+
+class BorrowFromHoldsUseCase {
+  final BorrowRepository repository;
+
+  BorrowFromHoldsUseCase(this.repository);
+
+  Future<void> call(List<int> holdIds) {
+    return repository.borrowFromHolds(holdIds);
+  }
+}
+
+class RemoveBookHoldUseCase {
+  final BorrowRepository repository;
+
+  RemoveBookHoldUseCase(this.repository);
+
+  Future<void> call(List<int> holdIds) {
+    return repository.removeBookHold(holdIds);
+  }
+}

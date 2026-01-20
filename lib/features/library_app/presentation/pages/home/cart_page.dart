@@ -84,7 +84,9 @@ class _CartPageState extends State<CartPage> {
     if (_selectedHoldIds.isEmpty) {
       return;
     }
-    // TODO: Implement delete logic here via Bloc
+    context.read<BorrowBloc>().add(
+      RemoveBookHoldEvent(_selectedHoldIds.toList()),
+    );
   }
 
   @override
@@ -140,6 +142,22 @@ class _CartPageState extends State<CartPage> {
           final holds = allHolds.where((hold) {
             return hold.expiresAt.toUtc().isAfter(nowUtc);
           }).toList();
+
+          final currentHoldIds = holds.map((h) => h.holdId).toSet();
+          if (_selectedHoldIds.isNotEmpty) {
+            final validSelectedIds = _selectedHoldIds
+                .where((id) => currentHoldIds.contains(id))
+                .toSet();
+            if (validSelectedIds.length != _selectedHoldIds.length) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {
+                    _selectedHoldIds = validSelectedIds;
+                  });
+                }
+              });
+            }
+          }
 
           final areAllSelected =
               holds.isNotEmpty && _selectedHoldIds.length == holds.length;
@@ -271,6 +289,18 @@ class _CartPageState extends State<CartPage> {
                   onPressed: selectedHolds.isEmpty
                       ? null
                       : () {
+                          // Kiểm tra giới hạn 5 cuốn khi bấm mượn sách
+                          if (selectedHolds.length > 5) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Bạn chỉ có thể mượn tối đa 5 cuốn sách cùng lúc',
+                                ),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                            return;
+                          }
                           Navigator.push(
                             context,
                             MaterialPageRoute(

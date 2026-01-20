@@ -12,12 +12,23 @@ part 'borrow_state.dart';
 class BorrowBloc extends Bloc<BorrowEvent, BorrowState> {
   final GetBookHoldsUseCase getBookHoldsUseCase;
   final AddBookHoldUseCase addBookHoldUseCase;
+  final RemoveBookHoldUseCase removeBookHoldUseCase;
+  final BorrowNowUseCase borrowNowUseCase;
+  final BorrowFromHoldsUseCase borrowFromHoldsUseCase;
 
-  BorrowBloc(this.getBookHoldsUseCase, this.addBookHoldUseCase)
-    : super(BorrowInitial()) {
+  BorrowBloc(
+    this.getBookHoldsUseCase,
+    this.addBookHoldUseCase,
+    this.removeBookHoldUseCase,
+    this.borrowNowUseCase,
+    this.borrowFromHoldsUseCase,
+  ) : super(BorrowInitial()) {
     on<LoadBookHoldsEvent>(_onLoadBookHolds);
     on<RefreshBookHoldsEvent>(_onRefreshBookHolds);
     on<AddBookHoldEvent>(_onAddBookHold);
+    on<RemoveBookHoldEvent>(_onRemoveBookHold);
+    on<BorrowNowEvent>(_onBorrowNow);
+    on<BorrowFromHoldsEvent>(_onBorrowFromHolds);
   }
 
   Future<void> _onLoadBookHolds(
@@ -64,6 +75,62 @@ class BorrowBloc extends Bloc<BorrowEvent, BorrowState> {
       emit(AddBookHoldFailure(error, e));
     } catch (e) {
       emit(AddBookHoldFailure('Lỗi khi thêm đặt mượn sách', e));
+    }
+  }
+
+  Future<void> _onRemoveBookHold(
+    RemoveBookHoldEvent event,
+    Emitter<BorrowState> emit,
+  ) async {
+    try {
+      await removeBookHoldUseCase(event.holdIds);
+      if (state is ListBookHoldsLoaded) {
+        final currentHolds = (state as ListBookHoldsLoaded).holds;
+        final updatedHolds = currentHolds
+            .where((hold) => !event.holdIds.contains(hold.holdId))
+            .toList();
+        emit(ListBookHoldsLoaded(updatedHolds));
+      } else {
+        emit(RemoveBookHoldSuccess());
+      }
+    } on DioException catch (e) {
+      final error = ErrorHandler.getErrorMessage(e);
+      emit(RemoveBookHoldFailure(error, e));
+    } catch (e) {
+      emit(RemoveBookHoldFailure('Lỗi khi xóa sách trong kệ', e));
+    }
+  }
+
+  Future<void> _onBorrowNow(
+    BorrowNowEvent event,
+    Emitter<BorrowState> emit,
+  ) async {
+    try {
+      emit(BorrowLoading());
+      await borrowNowUseCase(event.bookId);
+      emit(BorrowSuccess());
+    } on DioException catch (e) {
+      final error = ErrorHandler.getErrorMessage(e);
+      emit(BorrowFailure(error, e));
+    } catch (e) {
+      emit(BorrowFailure('Lỗi khi tạo phiếu mượn sách', e));
+    }
+  }
+
+  Future<void> _onBorrowFromHolds(
+    BorrowFromHoldsEvent event,
+    Emitter<BorrowState> emit,
+  ) async {
+    try {
+      emit(BorrowLoading());
+      await borrowFromHoldsUseCase(event.holdIds);
+      emit(BorrowSuccess());
+    } on DioException catch (e) {
+      final error = ErrorHandler.getErrorMessage(e);
+      emit(BorrowFailure(error, e));
+    } catch (e) {
+      print('Lỗi khi tạo phiếu mượn sách: ${e.toString()}');
+      emit(BorrowFailure('Lỗi khi tạo phiếu mượn sách: ${e.toString()}', e));
     }
   }
 }

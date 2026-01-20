@@ -21,3 +21,16 @@ class GetAllBooksUseCase {
     return repository.getAllBooks();
   }
 }
+
+class SearchBooksUseCase {
+  final BookRepository repository;
+
+  SearchBooksUseCase(this.repository);
+
+  Future<List<String>> call(String query) {
+    if (query.isEmpty) {
+      return Future.value([]);
+    }
+    return repository.getSuggestions(query);
+  }
+}

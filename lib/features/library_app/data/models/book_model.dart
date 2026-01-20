@@ -2,9 +2,9 @@ import 'package:json_annotation/json_annotation.dart';
 
 import '../../../../core/config/dio_config.dart';
 import '../../domain/entities/book.dart';
-import '../../domain/entities/pagination.dart';
 import 'author_model.dart';
 import 'category_model.dart';
+import 'pagination_model.dart';
 import 'publisher_model.dart';
 import 'shelf_model.dart';
 
@@ -89,41 +89,4 @@ class BooksListModel {
       _$BooksListModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$BooksListModelToJson(this);
-}
-
-/// Pagination model
-@JsonSerializable()
-class PaginationModel {
-  @JsonKey(name: 'page')
-  final int page;
-  @JsonKey(name: 'limit')
-  final int limit;
-  @JsonKey(name: 'totalItems')
-  final int totalItems;
-  @JsonKey(name: 'totalPages')
-  final int totalPages;
-  @JsonKey(name: 'hasNext')
-  final bool hasNext;
-
-  const PaginationModel({
-    required this.page,
-    required this.limit,
-    required this.totalItems,
-    required this.totalPages,
-    required this.hasNext,
-  });
-
-  factory PaginationModel.fromJson(Map<String, dynamic> json) =>
-      _$PaginationModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$PaginationModelToJson(this);
-
-  Pagination toEntity() {
-    return Pagination(
-      currentPage: page,
-      totalPages: totalPages,
-      pageSize: limit,
-      totalItems: totalItems,
-    );
-  }
 }

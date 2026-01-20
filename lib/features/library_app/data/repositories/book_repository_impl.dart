@@ -31,4 +31,14 @@ class BookRepositoryImpl implements BookRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<List<String>> getSuggestions(String query) async {
+    try {
+      final suggestions = await remoteDataSource.getSuggestions(query);
+      return suggestions.toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

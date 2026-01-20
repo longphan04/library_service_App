@@ -7,6 +7,7 @@ import '../../bloc/borrow/borrow_bloc.dart';
 import '../../widgets/my_button.dart';
 import '../../widgets/search_app_bar.dart';
 import '../../widgets/section_header.dart';
+import '../borrow/borrow_page.dart';
 import 'list_books.dart';
 
 class DetailPage extends StatefulWidget {
@@ -34,7 +35,7 @@ class _DetailPageState extends State<DetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.navBackground,
-      appBar: SearchAppBar(onSearchChanged: (query) {}, showBackButton: true),
+      appBar: const SearchAppBar(showBackButton: true),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -295,7 +296,25 @@ class _DetailPageState extends State<DetailPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: MyButton(text: 'Mượn ngay', onPressed: () {}),
+              child: BlocBuilder<BookDetailBloc, BookState>(
+                builder: (context, state) {
+                  return MyButton(
+                    text: 'Mượn ngay',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BorrowPage(
+                            book: state is BookDetailLoaded
+                                ? state.bookDetail
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),

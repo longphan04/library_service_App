@@ -25,3 +25,30 @@ class AddBookHoldEvent extends BorrowEvent {
   @override
   List<Object> get props => [holdId];
 }
+
+class RemoveBookHoldEvent extends BorrowEvent {
+  final List<int> holdIds;
+
+  const RemoveBookHoldEvent(this.holdIds);
+
+  @override
+  List<Object> get props => [holdIds];
+}
+
+class BorrowNowEvent extends BorrowEvent {
+  final int bookId;
+
+  const BorrowNowEvent(this.bookId);
+
+  @override
+  List<Object> get props => [bookId];
+}
+
+class BorrowFromHoldsEvent extends BorrowEvent {
+  final List<int> holdIds;
+
+  const BorrowFromHoldsEvent(this.holdIds);
+
+  @override
+  List<Object> get props => [holdIds];
+}

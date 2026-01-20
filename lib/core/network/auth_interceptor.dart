@@ -3,8 +3,10 @@ import 'dart:developer' as dev;
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../features/library_app/data/datasources/local/auth_local_datasource.dart';
+import '../../features/library_app/presentation/bloc/auth/auth_bloc.dart';
 
 /// Interceptor to attach access token and auto-refresh on 401.
 class AuthInterceptor extends QueuedInterceptorsWrapper {
@@ -103,6 +105,38 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
       _log('  Response data: ${err.response?.data}');
     } else if (err.error != null) {
       _log('  Error detail: ${err.error}');
+    }
+
+    if (statusCode == 403) {
+      final responseData = err.response?.data;
+      if (responseData is Map<String, dynamic>) {
+        final message = responseData['message'] as String?;
+        if (message?.contains('khóa') == true) {
+          _log('  => Account locked detected!');
+
+          // Kiểm tra xem có token không (user đang logged in)
+          final hasToken = await localDataSource.getAccessToken();
+          final isLoggedIn = hasToken != null && hasToken.isNotEmpty;
+
+          await localDataSource.clearTokens();
+          _log('  => Tokens cleared.');
+
+          if (isLoggedIn) {
+            _log('  => User was logged in. Triggering logout event...');
+            try {
+              final authBloc = GetIt.instance<AuthBloc>();
+              authBloc.add(const LogoutEvent());
+              _log('  => LogoutEvent emitted successfully.');
+            } catch (e) {
+              _log('  => ERROR emitting LogoutEvent: $e');
+            }
+          } else {
+            _log('  => User not logged in. Showing error to user.');
+          }
+
+          return super.onError(err, handler);
+        }
+      }
     }
 
     final shouldRefresh =

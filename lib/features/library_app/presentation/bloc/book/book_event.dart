@@ -40,3 +40,16 @@ class LoadMoreBooksEvent extends BookEvent {
   @override
   List<Object?> get props => [page, limit];
 }
+
+class SearchQueryChanged extends BookEvent {
+  final String query;
+  const SearchQueryChanged(this.query);
+
+  @override
+  List<Object> get props => [query];
+}
+
+class SearchCleared extends BookEvent {
+  @override
+  List<Object?> get props => [];
+}

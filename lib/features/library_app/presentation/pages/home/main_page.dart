@@ -46,10 +46,7 @@ class _MainPageState extends State<MainPage> {
         behavior: HitTestBehavior.translucent,
         child: Scaffold(
           backgroundColor: AppColors.background,
-          appBar: SearchAppBar(
-            onSearchChanged: (query) {},
-            showBackButton: false,
-          ),
+          appBar: const SearchAppBar(showBackButton: false),
           body: IndexedStack(index: _currentIndex, children: _pages),
           bottomNavigationBar: BottomNavBar(
             currentIndex: _currentIndex,
