@@ -80,3 +80,13 @@ class BorrowTicketActionFailure extends BorrowTicketState {
   @override
   List<Object> get props => [message, error];
 }
+
+class BorrowTicketActionSuccess extends BorrowTicketState {
+  @override
+  List<Object> get props => [];
+}
+
+class BorrowTicketActionLoading extends BorrowTicketState {
+  @override
+  List<Object> get props => [];
+}

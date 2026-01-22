@@ -39,8 +39,8 @@ class ConfirmWidget extends StatelessWidget {
             ),
           ),
           onPressed: () {
+            Navigator.of(context).pop(); // Pop dialog trước
             onConfirm();
-            Navigator.of(context).pop();
           },
           child: const Text(
             'Xác nhận',

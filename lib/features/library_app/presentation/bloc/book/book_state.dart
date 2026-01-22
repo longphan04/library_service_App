@@ -2,53 +2,49 @@ part of 'book_bloc.dart';
 
 abstract class BookState extends Equatable {
   const BookState();
-
   @override
   List<Object?> get props => [];
 }
 
-class BookInitial extends BookState {
-  @override
-  List<Object?> get props => [];
-}
+class BookInitial extends BookState {}
 
-class ListBooksLoading extends BookState {
-  @override
-  List<Object?> get props => [];
-}
+// ================== STATES CHO LIST ==================
 
-class BookDetailLoading extends BookState {
-  @override
-  List<Object?> get props => [];
-}
+class ListBooksLoading extends BookState {}
 
 class ListBooksLoaded extends BookState {
   final List<Book> books;
   final Pagination pagination;
 
-  const ListBooksLoaded(this.books, this.pagination);
+  // Lưu filter để dùng cho LoadMore
+  final String? currentQuery;
+  final String? currentCategoryId;
+  final String? currentSort;
+
+  const ListBooksLoaded(
+    this.books,
+    this.pagination, {
+    this.currentQuery,
+    this.currentCategoryId,
+    this.currentSort,
+  });
 
   @override
-  List<Object?> get props => [books, pagination];
+  List<Object?> get props => [
+    books,
+    pagination,
+    currentQuery,
+    currentCategoryId,
+    currentSort,
+  ];
 }
 
 class ListBooksLoadingMore extends BookState {
-  final List<Book> currentBooks;
-  final Pagination pagination;
-
-  const ListBooksLoadingMore(this.currentBooks, this.pagination);
+  final ListBooksLoaded previousState; // Giữ lại data cũ để hiển thị
+  const ListBooksLoadingMore(this.previousState);
 
   @override
-  List<Object?> get props => [currentBooks, pagination];
-}
-
-class BookDetailLoaded extends BookState {
-  final Book bookDetail;
-
-  const BookDetailLoaded(this.bookDetail);
-
-  @override
-  List<Object?> get props => [bookDetail];
+  List<Object?> get props => [previousState];
 }
 
 class ListBooksFailure extends BookState {
@@ -58,6 +54,18 @@ class ListBooksFailure extends BookState {
 
   @override
   List<Object?> get props => [message, error];
+}
+
+// ================== STATES CHO DETAIL ==================
+
+class BookDetailLoading extends BookState {}
+
+class BookDetailLoaded extends BookState {
+  final Book bookDetail;
+  const BookDetailLoaded(this.bookDetail);
+
+  @override
+  List<Object?> get props => [bookDetail];
 }
 
 class BookDetailFailure extends BookState {

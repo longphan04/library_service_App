@@ -10,18 +10,14 @@ import '../../../domain/usecases/borrow_ticket_usecase.dart';
 part 'borrow_ticket_event.dart';
 part 'borrow_ticket_state.dart';
 
-class BorrowTicketListBloc extends Bloc<BorrowTicketEvent, BorrowTicketState> {
-  final GetBorrowTicketsUseCase getBorrowTicketsUseCase;
+class BorrowTicketActionBloc
+    extends Bloc<BorrowTicketEvent, BorrowTicketState> {
   final CancelBorrowTicketUseCase cancelBorrowTicketUseCase;
   final RenewBorrowTicketUseCase renewBorrowTicketUseCase;
-
-  BorrowTicketListBloc(
-    this.getBorrowTicketsUseCase,
+  BorrowTicketActionBloc(
     this.cancelBorrowTicketUseCase,
     this.renewBorrowTicketUseCase,
   ) : super(BorrowTicketInitial()) {
-    on<LoadBorrowTicketsEvent>(_onLoadBorrowTickets);
-    on<RefreshBorrowTicketsEvent>(_onRefreshBorrowTickets);
     on<CancelBorrowTicketEvent>(_onCancelBorrowTicket);
     on<RenewBorrowTicketEvent>(_onRenewBorrowTicket);
   }
@@ -32,11 +28,12 @@ class BorrowTicketListBloc extends Bloc<BorrowTicketEvent, BorrowTicketState> {
   ) async {
     try {
       await cancelBorrowTicketUseCase(event.ticketId);
-      add(RefreshBorrowTicketsEvent());
+      emit(BorrowTicketActionSuccess());
     } on DioException catch (e) {
       final error = ErrorHandler.getErrorMessage(e);
-      print('Lỗi khi hủy phiếu mượn: $error');
+      emit(BorrowTicketActionFailure(error, e));
     } catch (e) {
+      emit(BorrowTicketActionFailure('Lỗi khi hủy phiếu mượn', e));
       print('Lỗi khi hủy phiếu mượn: $e');
     }
   }
@@ -47,13 +44,23 @@ class BorrowTicketListBloc extends Bloc<BorrowTicketEvent, BorrowTicketState> {
   ) async {
     try {
       await renewBorrowTicketUseCase(event.ticketId);
-      add(RefreshBorrowTicketsEvent());
+      emit(BorrowTicketActionSuccess());
     } on DioException catch (e) {
       final error = ErrorHandler.getErrorMessage(e);
-      print('Lỗi khi gia hạn phiếu mượn: $error');
+      emit(BorrowTicketActionFailure(error, e));
     } catch (e) {
-      print('Lỗi khi gia hạn phiếu mượn: $e');
+      emit(BorrowTicketActionFailure('Lỗi khi gia hạn phiếu mượn', e));
     }
+  }
+}
+
+class BorrowTicketListBloc extends Bloc<BorrowTicketEvent, BorrowTicketState> {
+  final GetBorrowTicketsUseCase getBorrowTicketsUseCase;
+
+  BorrowTicketListBloc(this.getBorrowTicketsUseCase)
+    : super(BorrowTicketInitial()) {
+    on<LoadBorrowTicketsEvent>(_onLoadBorrowTickets);
+    on<RefreshBorrowTicketsEvent>(_onRefreshBorrowTickets);
   }
 
   Future<void> _onLoadBorrowTickets(

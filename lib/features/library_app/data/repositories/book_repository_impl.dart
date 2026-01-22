@@ -9,6 +9,16 @@ class BookRepositoryImpl implements BookRepository {
   BookRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<List<Book>> getRecommendedBooks() async {
+    try {
+      final booksListModel = await remoteDataSource.getRecommendedBooks();
+      return booksListModel.data.map((model) => model.toEntity()).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<Book> getBookDetails(int bookId) async {
     try {
       final bookModel = await remoteDataSource.getBookDetails(bookId);
@@ -19,9 +29,21 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
-  Future<(List<Book>, Pagination)> getAllBooks() async {
+  Future<(List<Book>, Pagination)> getAllBooks(
+    String? query,
+    String? categoryId,
+    String? sort,
+    int? page,
+    int? limit,
+  ) async {
     try {
-      final booksListModel = await remoteDataSource.getAllBooks();
+      final booksListModel = await remoteDataSource.getAllBooks(
+        query: query,
+        categoryId: categoryId,
+        sort: sort,
+        page: page,
+        limit: limit,
+      );
       final books = booksListModel.data
           .map((model) => model.toEntity())
           .toList();

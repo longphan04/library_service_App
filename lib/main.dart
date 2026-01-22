@@ -5,9 +5,13 @@ import 'core/di/service_locator.dart';
 import 'core/theme/app_colors.dart';
 import 'features/library_app/presentation/bloc/auth/auth_bloc.dart';
 import 'features/library_app/presentation/bloc/book/book_bloc.dart';
+import 'features/library_app/presentation/bloc/book/search_bloc.dart';
 import 'features/library_app/presentation/bloc/borrow/borrow_bloc.dart';
 import 'features/library_app/presentation/bloc/borrow/borrow_ticket_bloc.dart';
 import 'features/library_app/presentation/bloc/category/category_bloc.dart';
+import 'features/library_app/presentation/bloc/home/home_bloc.dart';
+import 'features/library_app/presentation/bloc/home/home_event.dart';
+import 'features/library_app/presentation/bloc/message/notification_bloc.dart';
 import 'features/library_app/presentation/bloc/profile/profile_bloc.dart';
 import 'features/library_app/presentation/pages/admin/admin_page.dart';
 import 'features/library_app/presentation/pages/auth/login_page.dart';
@@ -44,12 +48,23 @@ class MyApp extends StatelessWidget {
         BlocProvider<BookDetailBloc>(
           create: (context) => getIt<BookDetailBloc>(),
         ),
+        BlocProvider<HomeBloc>(
+          create: (context) =>
+              getIt<HomeBloc>()..add(const LoadHomeDataEvent()),
+        ),
+        BlocProvider<SearchBloc>(create: (context) => getIt<SearchBloc>()),
         BlocProvider<BorrowBloc>(create: (context) => getIt<BorrowBloc>()),
         BlocProvider<BorrowTicketListBloc>(
           create: (context) => getIt<BorrowTicketListBloc>(),
         ),
         BlocProvider<BorrowTicketBloc>(
           create: (context) => getIt<BorrowTicketBloc>(),
+        ),
+        BlocProvider<BorrowTicketActionBloc>(
+          create: (context) => getIt<BorrowTicketActionBloc>(),
+        ),
+        BlocProvider<NotificationBloc>(
+          create: (context) => getIt<NotificationBloc>(),
         ),
       ],
       child: BlocListener<AuthBloc, AuthState>(

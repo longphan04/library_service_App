@@ -10,3 +10,13 @@ class GetCategoriesUseCase {
     return await repository.getCategories();
   }
 }
+
+class GetPopularCategoriesUseCase {
+  final CategoryRepository repository;
+
+  GetPopularCategoriesUseCase(this.repository);
+
+  Future<List<Category>> call() async {
+    return await repository.getPopularCategories();
+  }
+}

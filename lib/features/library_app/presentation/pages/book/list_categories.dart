@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../domain/entities/category.dart';
 import 'category_card.dart';
+import 'search_page.dart';
 
 class ListCategories extends StatelessWidget {
   final List<Category> categories;
@@ -27,7 +28,15 @@ class ListCategories extends StatelessWidget {
           image: category.image,
           bookCount: category.bookCount,
           onTap: () {
-            // Handle category tap
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SearchPage.fromCategory(
+                  categoryId: category.categoryId,
+                  categoryName: category.name,
+                ),
+              ),
+            );
           },
         );
       },

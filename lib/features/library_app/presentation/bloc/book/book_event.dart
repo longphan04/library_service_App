@@ -2,24 +2,46 @@ part of 'book_bloc.dart';
 
 abstract class BookEvent extends Equatable {
   const BookEvent();
-
   @override
   List<Object?> get props => [];
 }
 
+// ================== EVENTS CHO LIST / SEARCH / FILTER ==================
+
 class LoadBooksEvent extends BookEvent {
   final int page;
   final int limit;
+  // Các tham số filter
+  final String? query;
+  final String? categoryId;
+  final String? sort; // 'newest', 'popular', etc.
 
-  const LoadBooksEvent({this.page = 1, this.limit = 10});
+  const LoadBooksEvent({
+    this.page = 1,
+    this.limit = 10,
+    this.query,
+    this.categoryId,
+    this.sort,
+  });
 
   @override
-  List<Object?> get props => [page, limit];
+  List<Object?> get props => [page, limit, query, categoryId, sort];
 }
+
+class LoadMoreBooksEvent extends BookEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class RefreshBooksEvent extends BookEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+// ================== EVENTS CHO DETAIL ==================
 
 class LoadBookDetailEvent extends BookEvent {
   final int bookId;
-
   const LoadBookDetailEvent(this.bookId);
 
   @override
@@ -27,29 +49,8 @@ class LoadBookDetailEvent extends BookEvent {
 }
 
 class RefreshBookDetailEvent extends BookEvent {
-  @override
-  List<Object?> get props => [];
-}
-
-class LoadMoreBooksEvent extends BookEvent {
-  final int page;
-  final int limit;
-
-  const LoadMoreBooksEvent({required this.page, this.limit = 10});
-
-  @override
-  List<Object?> get props => [page, limit];
-}
-
-class SearchQueryChanged extends BookEvent {
-  final String query;
-  const SearchQueryChanged(this.query);
-
-  @override
-  List<Object> get props => [query];
-}
-
-class SearchCleared extends BookEvent {
+  // Cần truyền ID hoặc lấy từ state cũ, ở đây mình giữ nguyên logic cũ của bạn
+  // là lấy từ state nên không cần truyền param
   @override
   List<Object?> get props => [];
 }

@@ -159,7 +159,11 @@ class _BookCardState extends State<BookCard> {
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                       child: Text(
-                        widget.bookHold?.copyNote ?? '',
+                        widget.isShelfMode
+                            ? widget.bookHold?.copyNote ?? ''
+                            : (widget.book.availableCopies ?? 0) > 0
+                            ? 'Còn ${widget.book.availableCopies} bản'
+                            : 'Hết sách',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.subText,

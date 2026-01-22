@@ -1,9 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/date_formatter.dart';
 import '../../../domain/entities/borrow_ticket.dart';
+import '../../bloc/borrow/borrow_ticket_bloc.dart';
+import '../../widgets/confirm_widget.dart';
 import '../../widgets/my_button.dart';
 import '../book/detail_page.dart';
 
@@ -305,7 +308,7 @@ class _BorrowHistoryDetailPageState extends State<BorrowHistoryDetailPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Vui lòng đến thư viện để nhận sách trước ngày ${formatDate(widget.record.dueDate!)}',
+                        'Vui lòng đến thư viện để nhận sách trước ngày ${formatDate(widget.record.pickupExpiresAt ?? DateTime.now())}',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.bodyText,
@@ -380,13 +383,72 @@ class _BorrowHistoryDetailPageState extends State<BorrowHistoryDetailPage> {
                           horizontal: 20.0,
                         ),
                         child: Center(
-                          child: MyButton(
-                            text: widget.record.status == TicketStatus.pending
-                                ? 'Hủy đơn'
-                                : 'Gia hạn',
-                            onPressed: () {},
-                            isReversedColor: true,
-                          ),
+                          child:
+                              BlocConsumer<
+                                BorrowTicketActionBloc,
+                                BorrowTicketState
+                              >(
+                                listener: (context, state) {
+                                  if (state is BorrowTicketActionFailure) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(state.message),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                  if (state is BorrowTicketActionSuccess) {
+                                    Navigator.of(context).pop();
+                                    // Refresh list
+                                    context.read<BorrowTicketListBloc>().add(
+                                      RefreshBorrowTicketsEvent(),
+                                    );
+                                  }
+                                },
+
+                                builder: (context, state) {
+                                  return MyButton(
+                                    text:
+                                        widget.record.status ==
+                                            TicketStatus.pending
+                                        ? 'Hủy đơn'
+                                        : 'Gia hạn',
+                                    onPressed: () {
+                                      final actionBloc = context
+                                          .read<BorrowTicketActionBloc>();
+                                      showDialog(
+                                        context: context,
+                                        builder: (dialogContext) {
+                                          return ConfirmWidget(
+                                            message:
+                                                widget.record.status ==
+                                                    TicketStatus.pending
+                                                ? "Bạn có chắc chắn muốn hủy đơn mượn sách này?"
+                                                : 'Bạn chỉ được gia hạn đơn mượn sách này một lần. Bạn có chắc chắn muốn gia hạn?',
+                                            onConfirm: () {
+                                              if (widget.record.status ==
+                                                  TicketStatus.pending) {
+                                                actionBloc.add(
+                                                  CancelBorrowTicketEvent(
+                                                    widget.ticket.id,
+                                                  ),
+                                                );
+                                              } else {
+                                                actionBloc.add(
+                                                  RenewBorrowTicketEvent(
+                                                    widget.ticket.id,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                          );
+                                        },
+                                      );
+                                    },
+                                    isReversedColor: true,
+                                  );
+                                },
+                              ),
                         ),
                       ),
                   ],

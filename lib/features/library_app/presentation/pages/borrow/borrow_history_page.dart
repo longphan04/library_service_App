@@ -70,25 +70,18 @@ class _BorrowHistoryPageState extends State<BorrowHistoryPage> {
           }
 
           if (state is BorrowTicketListFailure) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    state.message,
-                    style: TextStyle(color: AppColors.subText),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<BorrowTicketListBloc>().add(
-                        LoadBorrowTicketsEvent(),
-                      );
-                    },
-                    child: const Text('Thử lại'),
-                  ),
-                ],
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<BorrowTicketListBloc>().add(
+                  RefreshBorrowTicketsEvent(),
+                );
+              },
+              child: Center(
+                child: Text(
+                  state.message,
+                  style: TextStyle(color: AppColors.subText),
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
@@ -96,81 +89,88 @@ class _BorrowHistoryPageState extends State<BorrowHistoryPage> {
           if (state is BorrowTicketListLoaded) {
             final filteredTickets = _filterTickets(state.tickets);
 
-            return Stack(
-              children: [
-                Positioned(
-                  top: 12,
-                  left: 16,
-                  right: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: AppColors.sectionBackground,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              indexCategory = index;
-                            });
-                          },
-                          child: Center(
-                            child: Text(
-                              categories[index],
-                              style: TextStyle(
-                                color: indexCategory == index
-                                    ? AppColors.primaryButton
-                                    : AppColors.subText,
-                                fontSize: 14,
-                                fontWeight: indexCategory == index
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<BorrowTicketListBloc>().add(
+                  RefreshBorrowTicketsEvent(),
+                );
+              },
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 12,
+                    left: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: AppColors.sectionBackground,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                indexCategory = index;
+                              });
+                            },
+                            child: Center(
+                              child: Text(
+                                categories[index],
+                                style: TextStyle(
+                                  color: indexCategory == index
+                                      ? AppColors.primaryButton
+                                      : AppColors.subText,
+                                  fontSize: 14,
+                                  fontWeight: indexCategory == index
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 16),
-                      itemCount: categories.length,
+                          );
+                        },
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 16),
+                        itemCount: categories.length,
+                      ),
                     ),
                   ),
-                ),
-                Positioned.fill(
-                  top: 72,
-                  child: filteredTickets.isEmpty
-                      ? Center(
-                          child: Text(
-                            'Không có lịch sử mượn sách',
-                            style: TextStyle(color: AppColors.subText),
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: filteredTickets.length,
-                          itemBuilder: (context, index) {
-                            return BlocProvider(
-                              create: (context) =>
-                                  BorrowTicketBloc(
-                                    getIt<GetBorrowTicketDetailUseCase>(),
-                                  )..add(
-                                    LoadBorrowTicketDetailEvent(
-                                      filteredTickets[index].id,
+                  Positioned.fill(
+                    top: 72,
+                    child: filteredTickets.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Không có lịch sử mượn sách',
+                              style: TextStyle(color: AppColors.subText),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredTickets.length,
+                            itemBuilder: (context, index) {
+                              return BlocProvider(
+                                create: (context) =>
+                                    BorrowTicketBloc(
+                                      getIt<GetBorrowTicketDetailUseCase>(),
+                                    )..add(
+                                      LoadBorrowTicketDetailEvent(
+                                        filteredTickets[index].id,
+                                      ),
                                     ),
-                                  ),
-                              child: BorrowTicketCard(
-                                ticket: filteredTickets[index],
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
+                                child: BorrowTicketCard(
+                                  ticket: filteredTickets[index],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             );
           }
 

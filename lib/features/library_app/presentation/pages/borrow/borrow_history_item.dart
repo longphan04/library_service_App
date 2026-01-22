@@ -43,7 +43,7 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
       case TicketStatus.pending:
         return 'Đang chờ';
       case TicketStatus.pickedUp:
-        return 'Đã nhận';
+        return 'Đã mượn';
       case TicketStatus.overdue:
         return 'Quá hạn';
       case TicketStatus.approved:
@@ -211,25 +211,31 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
                   ),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: BlocConsumer<BorrowTicketListBloc, BorrowTicketState>(
+                    child: BlocConsumer<BorrowTicketActionBloc, BorrowTicketState>(
                       listener: (context, state) {
                         if (state is BorrowTicketActionFailure) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(state.message)),
+                          );
+                        } else if (state is BorrowTicketActionSuccess) {
+                          context.read<BorrowTicketListBloc>().add(
+                            RefreshBorrowTicketsEvent(),
                           );
                         }
                       },
                       builder: (context, state) {
                         return OutlinedButton(
                           onPressed: () {
+                            final actionBloc = context
+                                .read<BorrowTicketActionBloc>();
                             showDialog(
                               context: context,
-                              builder: (context) {
+                              builder: (dialogContext) {
                                 return ConfirmWidget(
                                   message:
                                       'Bạn có chắc chắn muốn hủy đơn mượn sách này?',
                                   onConfirm: () {
-                                    context.read<BorrowTicketListBloc>().add(
+                                    actionBloc.add(
                                       CancelBorrowTicketEvent(widget.ticket.id),
                                     );
                                   },
@@ -263,53 +269,65 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
                   if (widget.ticket.renewCount == 0) ...[
                     Align(
                       alignment: Alignment.centerRight,
-                      child: BlocConsumer<BorrowTicketListBloc, BorrowTicketState>(
-                        listener: (context, state) {
-                          if (state is BorrowTicketActionFailure) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(state.message)),
-                            );
-                          }
-                        },
-                        builder: (context, state) {
-                          return OutlinedButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return ConfirmWidget(
-                                    message:
-                                        'Bạn chỉ được gia hạn đơn mượn sách này một lần. Bạn có chắc chắn muốn gia hạn?',
-                                    onConfirm: () {
-                                      context.read<BorrowTicketListBloc>().add(
-                                        RenewBorrowTicketEvent(
-                                          widget.ticket.id,
-                                        ),
+                      child:
+                          BlocConsumer<
+                            BorrowTicketActionBloc,
+                            BorrowTicketState
+                          >(
+                            listener: (context, state) {
+                              if (state is BorrowTicketActionFailure) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(state.message)),
+                                );
+                              } else if (state is BorrowTicketActionSuccess) {
+                                context.read<BorrowTicketListBloc>().add(
+                                  RefreshBorrowTicketsEvent(),
+                                );
+                              }
+                            },
+                            builder: (context, state) {
+                              return OutlinedButton(
+                                onPressed: () {
+                                  final actionBloc = context
+                                      .read<BorrowTicketActionBloc>();
+                                  showDialog(
+                                    context: context,
+                                    builder: (dialogContext) {
+                                      return ConfirmWidget(
+                                        message:
+                                            'Bạn chỉ được gia hạn đơn mượn sách này một lần. Bạn có chắc chắn muốn gia hạn?',
+                                        onConfirm: () {
+                                          actionBloc.add(
+                                            RenewBorrowTicketEvent(
+                                              widget.ticket.id,
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   );
                                 },
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
+                                    color: AppColors.primaryButton,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Gia hạn',
+                                  style: TextStyle(
+                                    color: AppColors.buttonSecondaryText,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               );
                             },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: AppColors.primaryButton),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                            ),
-                            child: Text(
-                              'Gia hạn',
-                              style: TextStyle(
-                                color: AppColors.buttonSecondaryText,
-                                fontSize: 12,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                          ),
                     ),
                   ] else
                     Align(
@@ -325,15 +343,15 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
                     ),
                 ] else if (widget.ticket.status == TicketStatus.returned) ...[
                   Text(
-                    'Hạn: ${formatDate(widget.ticket.dueDate ?? DateTime.now())}',
+                    'Hạn: ${widget.ticket.dueDate != null ? formatDate(widget.ticket.dueDate!) : 'N/A'}',
                     style: TextStyle(fontSize: 14, color: AppColors.subText),
                   ),
                   Text(
-                    'Đã trả: ${formatDate(widget.ticket.dueDate ?? DateTime.now())}',
+                    'Đã trả: ${widget.ticket.dueDate != null ? formatDate(widget.ticket.dueDate!) : 'N/A'}',
                     style: TextStyle(fontSize: 14, color: AppColors.subText),
                   ),
                   Text(
-                    'Đã mượn: ${DateTime.now().difference(widget.ticket.dueDate ?? DateTime.now()).inDays} ngày',
+                    'Đã mượn: ${widget.ticket.dueDate?.difference(widget.ticket.requestedAt).inDays} ngày',
                     style: TextStyle(fontSize: 14, color: AppColors.subText),
                   ),
                 ] else if (widget.ticket.status == TicketStatus.overdue) ...[

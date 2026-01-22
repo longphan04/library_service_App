@@ -16,4 +16,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<List<Category>> getPopularCategories() async {
+    try {
+      final categoryModels = await remoteDataSource.getPopularCategories();
+      return categoryModels.map((model) => model.toEntity()).toList();
+    } on Exception {
+      rethrow;
+    }
+  }
 }

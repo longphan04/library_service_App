@@ -16,12 +16,15 @@ class CategoryModel {
   final String? image;
   @JsonKey(name: 'bookCount')
   final int? bookCount;
+  @JsonKey(name: 'totalBorrows')
+  final int? totalBorrows;
 
   const CategoryModel({
     required this.categoryId,
     required this.name,
     this.image,
     this.bookCount,
+    this.totalBorrows,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) =>
@@ -34,6 +37,7 @@ class CategoryModel {
       name: name,
       image: '${DioConfig.baseUrl}/public/${image ?? ''}',
       bookCount: bookCount ?? 0,
+      totalBorrows: totalBorrows ?? 0,
     );
   }
 }
