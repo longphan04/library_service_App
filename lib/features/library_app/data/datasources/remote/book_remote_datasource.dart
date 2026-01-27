@@ -4,6 +4,7 @@ import '../../models/book_model.dart';
 import '../../models/pagination_model.dart';
 
 abstract class BookRemoteDatasource {
+  Future<BookModel> getBookById(String id);
   Future<BookModel> getBookDetails(int bookId);
   Future<BooksListModel> getAllBooks({
     String? query,
@@ -20,6 +21,25 @@ class BookRemoteDatasourceImpl implements BookRemoteDatasource {
   final Dio dio;
 
   BookRemoteDatasourceImpl({required this.dio});
+
+  @override
+  Future<BookModel> getBookById(String id) async {
+    try {
+      final response = await dio.get('/book/identifier/$id');
+
+      if (response.statusCode! >= 400) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
+      }
+      final model = BookModel.fromJson(response.data);
+      return model;
+    } on DioException {
+      rethrow;
+    }
+  }
 
   @override
   Future<BooksListModel> getRecommendedBooks() async {

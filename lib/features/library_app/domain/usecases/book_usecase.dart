@@ -2,6 +2,16 @@ import '../entities/book.dart';
 import '../entities/pagination.dart';
 import '../repositories/book_repository.dart';
 
+class GetBookByIdUseCase {
+  final BookRepository repository;
+
+  GetBookByIdUseCase(this.repository);
+
+  Future<Book> call(String id) {
+    return repository.getBookById(id);
+  }
+}
+
 class GetBookDetailsUseCase {
   final BookRepository repository;
 

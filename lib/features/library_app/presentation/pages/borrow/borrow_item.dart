@@ -11,7 +11,7 @@ class BorrowItem extends StatefulWidget {
   final String category;
   final String? note;
   final DateTime? expiresAt;
-  final VoidCallback? onDelete; // Thêm callback này
+  final VoidCallback? onDelete;
 
   const BorrowItem({
     super.key,
@@ -21,7 +21,7 @@ class BorrowItem extends StatefulWidget {
     required this.category,
     this.note,
     this.expiresAt,
-    this.onDelete, // Thêm vào constructor
+    this.onDelete,
   });
 
   @override
@@ -156,7 +156,7 @@ class _BorrowItemState extends State<BorrowItem> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       InkWell(
-                        onTap: widget.onDelete, // Gán callback xóa vào đây
+                        onTap: widget.onDelete,
                         child: Container(
                           width: 24,
                           height: 24,

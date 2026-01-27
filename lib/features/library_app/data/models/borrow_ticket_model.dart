@@ -24,12 +24,18 @@ class TicketModel {
   final DateTime? pickedUpAt;
   @JsonKey(name: 'due_date')
   final DateTime? dueDate;
+  @JsonKey(name: 'returned_at')
+  final DateTime? returnedAt;
+  @JsonKey(name: 'cancelled_at')
+  final DateTime? cancelledAt;
   @JsonKey(name: 'renew_count')
   final int renewCount;
   @JsonKey(name: 'is_overdue')
-  final bool isOverdue;
+  final bool? isOverdue;
   @JsonKey(name: 'overdue_days')
-  final int overdueDays;
+  final int? overdueDays;
+  @JsonKey(name: 'items')
+  final List<TicketItemModel>? items;
 
   const TicketModel({
     required this.ticketId,
@@ -40,9 +46,12 @@ class TicketModel {
     this.pickupExpiresAt,
     this.pickedUpAt,
     this.dueDate,
+    this.returnedAt,
+    this.cancelledAt,
     required this.renewCount,
-    required this.isOverdue,
-    required this.overdueDays,
+    this.isOverdue,
+    this.overdueDays,
+    this.items,
   });
 
   factory TicketModel.fromJson(Map<String, dynamic> json) =>
@@ -51,22 +60,47 @@ class TicketModel {
   Map<String, dynamic> toJson() => _$TicketModelToJson(this);
 
   Ticket toEntity() {
+    final bool calculatedIsOverdue = isOverdue ?? _calculateIsOverdue();
+    final int calculatedOverdueDays = overdueDays ?? _calculateOverdueDays();
+
     return Ticket(
       id: ticketId,
       code: ticketCode,
-      status: _parseStatus(status),
+      status: _parseStatus(status, calculatedIsOverdue),
       requestedAt: requestedAt,
       approvedAt: approvedAt,
       pickupExpiresAt: pickupExpiresAt,
       pickedUpAt: pickedUpAt,
       dueDate: dueDate,
+      returnedAt: returnedAt,
+      cancelledAt: cancelledAt,
       renewCount: renewCount,
-      isOverdue: isOverdue,
-      overdueDays: overdueDays,
+      isOverdue: calculatedIsOverdue,
+      overdueDays: calculatedOverdueDays,
+      items: items?.map((item) => item.toEntity()).toList(),
     );
   }
 
-  TicketStatus _parseStatus(String status) {
+  bool _calculateIsOverdue() {
+    if (status.toUpperCase() == 'RETURNED' ||
+        status.toUpperCase() == 'CANCELLED') {
+      return false;
+    }
+    if (dueDate == null) return false;
+    return DateTime.now().isAfter(dueDate!);
+  }
+
+  int _calculateOverdueDays() {
+    if (dueDate == null) return 0;
+    if (!_calculateIsOverdue()) return 0;
+    return DateTime.now().difference(dueDate!).inDays;
+  }
+
+  TicketStatus _parseStatus(String status, bool isOverdue) {
+    if (isOverdue && status.toUpperCase() == 'PICKED_UP') {
+      return TicketStatus.overdue;
+    }
+
     switch (status.toUpperCase()) {
       case 'PENDING':
         return TicketStatus.pending;
@@ -97,97 +131,17 @@ class TicketListModel {
 
   factory TicketListModel.fromJson(Map<String, dynamic> json) =>
       _$TicketListModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$TicketListModelToJson(this);
-}
-
-@JsonSerializable()
-class TicketDetailModel {
-  @JsonKey(name: 'ticket_id')
-  final int ticketId;
-  @JsonKey(name: 'ticket_code')
-  final String ticketCode;
-  @JsonKey(name: 'status')
-  final String status;
-  @JsonKey(name: 'requested_at')
-  final DateTime requestedAt;
-  @JsonKey(name: 'approved_at')
-  final DateTime? approvedAt;
-  @JsonKey(name: 'pickup_expires_at')
-  final DateTime? pickupExpiresAt;
-  @JsonKey(name: 'picked_up_at')
-  final DateTime? pickedUpAt;
-  @JsonKey(name: 'due_date')
-  final DateTime? dueDate;
-  @JsonKey(name: 'renew_count')
-  final int renewCount;
-  @JsonKey(name: 'items')
-  final List<TicketItemModel> items;
-
-  const TicketDetailModel({
-    required this.ticketId,
-    required this.ticketCode,
-    required this.status,
-    required this.requestedAt,
-    this.approvedAt,
-    this.pickupExpiresAt,
-    this.pickedUpAt,
-    this.dueDate,
-    required this.renewCount,
-    required this.items,
-  });
-
-  factory TicketDetailModel.fromJson(Map<String, dynamic> json) =>
-      _$TicketDetailModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$TicketDetailModelToJson(this);
-
-  TicketDetail toEntity() {
-    return TicketDetail(
-      id: ticketId,
-      code: ticketCode,
-      status: _parseStatus(status),
-      requestedAt: requestedAt,
-      approvedAt: approvedAt,
-      pickupExpiresAt: pickupExpiresAt,
-      pickedUpAt: pickedUpAt,
-      dueDate: dueDate,
-      renewCount: renewCount,
-      items: items.map((item) => item.toEntity()).toList(),
-    );
-  }
-
-  TicketStatus _parseStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'PENDING':
-        return TicketStatus.pending;
-      case 'APPROVED':
-        return TicketStatus.approved;
-      case 'PICKED_UP':
-        return TicketStatus.pickedUp;
-      case 'RETURNED':
-        return TicketStatus.returned;
-      case 'OVERDUE':
-        return TicketStatus.overdue;
-      case 'CANCELLED':
-        return TicketStatus.cancelled;
-      default:
-        return TicketStatus.pending;
-    }
-  }
 }
 
 @JsonSerializable()
 class TicketDetailResponseModel {
   @JsonKey(name: 'data')
-  final TicketDetailModel data;
+  final TicketModel data;
 
   const TicketDetailResponseModel({required this.data});
 
   factory TicketDetailResponseModel.fromJson(Map<String, dynamic> json) =>
       _$TicketDetailResponseModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$TicketDetailResponseModelToJson(this);
 }
 
 @JsonSerializable()
@@ -207,8 +161,6 @@ class TicketItemModel {
 
   factory TicketItemModel.fromJson(Map<String, dynamic> json) =>
       _$TicketItemModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$TicketItemModelToJson(this);
 
   TicketItem toEntity() {
     return TicketItem(
@@ -231,11 +183,7 @@ class TicketCopyModel {
   factory TicketCopyModel.fromJson(Map<String, dynamic> json) =>
       _$TicketCopyModelFromJson(json);
 
-  Map<String, dynamic> toJson() => _$TicketCopyModelToJson(this);
-
-  TicketCopy toEntity() {
-    return TicketCopy(id: id, note: note);
-  }
+  TicketCopy toEntity() => TicketCopy(id: id, note: note);
 }
 
 @JsonSerializable()
@@ -255,8 +203,6 @@ class TicketBookModel {
 
   factory TicketBookModel.fromJson(Map<String, dynamic> json) =>
       _$TicketBookModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$TicketBookModelToJson(this);
 
   TicketBook toEntity() {
     return TicketBook(

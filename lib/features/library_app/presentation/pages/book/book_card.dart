@@ -40,6 +40,7 @@ class _BookCardState extends State<BookCard> {
             builder: (context) => DetailPage(
               bookId: widget.book.bookId,
               initialCoverUrl: widget.book.coverUrl ?? '',
+              isUniqueId: true,
             ),
           ),
         );
@@ -161,12 +162,21 @@ class _BookCardState extends State<BookCard> {
                       child: Text(
                         widget.isShelfMode
                             ? widget.bookHold?.copyNote ?? ''
-                            : (widget.book.availableCopies ?? 0) > 0
-                            ? 'Còn ${widget.book.availableCopies} bản'
-                            : 'Hết sách',
+                            : (widget.book.availableCopies != null &&
+                                  widget.book.availableCopies! > 0)
+                            ? 'Còn sách'
+                            : (widget.book.availableCopies != null &&
+                                  widget.book.availableCopies! <= 0)
+                            ? 'Hết sách'
+                            : '',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.subText,
+                          color: widget.isShelfMode
+                              ? AppColors.subText
+                              : (widget.book.availableCopies != null &&
+                                    widget.book.availableCopies! > 0)
+                              ? Colors.green
+                              : Colors.red,
                         ),
                       ),
                     ),

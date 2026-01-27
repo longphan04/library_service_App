@@ -171,8 +171,6 @@ class _SearchAppBarState extends State<SearchAppBar> {
   }
 
   void _onSearchSubmitted(String value) {
-    if (value.trim().isEmpty) return;
-
     _controller.text = value;
     _unfocusSearchField();
 

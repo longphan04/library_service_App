@@ -28,7 +28,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       emit(CategoryLoaded(categories));
     } on DioException catch (e) {
       final error = ErrorHandler.getErrorMessage(e);
-      print('Error loading categories: $error');
       emit(CategoryFailure(error, e));
     } catch (e) {
       emit(CategoryFailure('Lỗi khi load danh mục', e));
@@ -41,10 +40,12 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   ) async {
     try {
       final categories = await getCategoriesUseCase();
+      for (var element in categories) {
+        print(element.image);
+      }
       emit(CategoryLoaded(categories));
     } on DioException catch (e) {
       final error = ErrorHandler.getErrorMessage(e);
-      print('Error refreshing categories: $error');
       emit(CategoryFailure(error, e));
     } catch (e) {
       emit(CategoryFailure('Lỗi khi làm mới danh mục', e));

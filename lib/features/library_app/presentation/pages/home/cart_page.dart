@@ -296,7 +296,7 @@ class _CartPageState extends State<CartPage> {
                                 content: Text(
                                   'Bạn chỉ có thể mượn tối đa 5 cuốn sách cùng lúc',
                                 ),
-                                duration: Duration(seconds: 2),
+                                duration: Duration(seconds: 1),
                               ),
                             );
                             return;

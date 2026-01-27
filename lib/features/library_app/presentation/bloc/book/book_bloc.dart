@@ -1,25 +1,31 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/services/data_refresh_service.dart';
 import '../../../../../core/utils/error_handler.dart';
 import '../../../domain/entities/book.dart';
 import '../../../domain/entities/pagination.dart';
-import '../../../domain/usecases/book_usecase.dart'; // Chứa cả GetAll và GetDetail
+import '../../../domain/usecases/book_usecase.dart';
 
 part 'book_event.dart';
 part 'book_state.dart';
 
-// ============================================================================
-// 1. BOOK BLOC (Xử lý Danh sách, Tìm kiếm, Filter, Load More)
-// ============================================================================
 class BookBloc extends Bloc<BookEvent, BookState> {
   final GetAllBooksUseCase getAllBooksUseCase;
+  StreamSubscription<void>? _refreshSubscription;
 
   BookBloc(this.getAllBooksUseCase) : super(BookInitial()) {
     on<LoadBooksEvent>(_onLoadBooks);
     on<LoadMoreBooksEvent>(_onLoadMoreBooks);
     on<RefreshBooksEvent>(_onRefreshBooks);
+
+    // Subscribe to book list refresh events
+    _refreshSubscription = DataRefreshService().onBookListRefresh.listen((_) {
+      add(RefreshBooksEvent());
+    });
   }
 
   Future<void> _onLoadBooks(
@@ -105,31 +111,50 @@ class BookBloc extends Bloc<BookEvent, BookState> {
           sort: currentState.currentSort,
         ),
       );
-    } else {
-      add(const LoadBooksEvent(page: 1));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _refreshSubscription?.cancel();
+    return super.close();
   }
 }
 
-// ============================================================================
-// 2. BOOK DETAIL BLOC (Xử lý Chi tiết sách)
-// ============================================================================
 class BookDetailBloc extends Bloc<BookEvent, BookState> {
   final GetBookDetailsUseCase getBookDetailUseCase;
+  final GetBookByIdUseCase getBookByIdUseCase;
+  StreamSubscription<int>? _refreshSubscription;
+  int? _currentBookId;
 
-  BookDetailBloc(this.getBookDetailUseCase) : super(BookInitial()) {
+  BookDetailBloc(this.getBookDetailUseCase, this.getBookByIdUseCase)
+    : super(BookInitial()) {
     on<LoadBookDetailEvent>(_onLoadBookDetail);
     on<RefreshBookDetailEvent>(_onRefreshBookDetail);
+
+    _refreshSubscription = DataRefreshService().onBookDetailRefresh.listen((
+      bookId,
+    ) {
+      if (_currentBookId != null && _currentBookId == bookId) {
+        add(RefreshBookDetailEvent());
+      }
+    });
   }
 
   Future<void> _onLoadBookDetail(
     LoadBookDetailEvent event,
     Emitter<BookState> emit,
   ) async {
+    _currentBookId = event.bookId;
     emit(BookDetailLoading());
     try {
-      final bookDetail = await getBookDetailUseCase(event.bookId);
-      emit(BookDetailLoaded(bookDetail));
+      if (event.isUniqueId == true) {
+        final bookById = await getBookByIdUseCase(event.bookId.toString());
+        emit(BookDetailLoaded(bookById));
+      } else {
+        final bookDetail = await getBookDetailUseCase(event.bookId);
+        emit(BookDetailLoaded(bookDetail));
+      }
     } on DioException catch (e) {
       final error = ErrorHandler.getErrorMessage(e);
       emit(BookDetailFailure(error, e));
@@ -156,5 +181,11 @@ class BookDetailBloc extends Bloc<BookEvent, BookState> {
         emit(BookDetailFailure('Lỗi khi làm mới chi tiết sách', e));
       }
     }
+  }
+
+  @override
+  Future<void> close() {
+    _refreshSubscription?.cancel();
+    return super.close();
   }
 }

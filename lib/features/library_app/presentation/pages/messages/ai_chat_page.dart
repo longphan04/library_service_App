@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../../core/di/service_locator.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../domain/entities/ai_book_source.dart';
+import '../../bloc/message/ai_chat_bloc.dart';
+import '../book/detail_page.dart';
+import 'ai_book_card.dart';
 
 class AIChatPage extends StatefulWidget {
   const AIChatPage({super.key});
 
   @override
-  State<AIChatPage> createState() => _AIChatPageState();
+  State<AIChatPage> createState() => AIChatPageState();
 }
 
-class _AIChatPageState extends State<AIChatPage> {
+class AIChatPageState extends State<AIChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
+
+  // Public getter for session ID (used by MessagePage to clear history)
+  String? get sessionId => getIt<AIChatBloc>().state.sessionId;
 
   @override
   void dispose() {
@@ -22,30 +31,14 @@ class _AIChatPageState extends State<AIChatPage> {
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
-    final userText = _messageController.text.trim();
 
-    setState(() {
-      _messages.add(ChatMessage(text: userText, isUser: true, sender: 'Bạn'));
-      _messageController.clear();
-      // show AI typing indicator
-      _removeExistingTyping();
-      _messages.add(
-        ChatMessage(text: '', isUser: false, sender: 'AI', isTyping: true),
-      );
-    });
+    final message = _messageController.text.trim();
+    _messageController.clear();
 
-    // Smoothly scroll to the newest message (anchored at bottom)
+    context.read<AIChatBloc>().add(SendAIChatMessage(message));
+
+    // Scroll to bottom after sending
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-
-    // Simulate AI response after short delay
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      final reply = _generateAIResponse(userText);
-      setState(() {
-        _removeExistingTyping();
-        _messages.add(ChatMessage(text: reply, isUser: false, sender: 'AI'));
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    });
   }
 
   void _scrollToBottom() {
@@ -60,36 +53,52 @@ class _AIChatPageState extends State<AIChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 72, 16, 16),
-            controller: _scrollController,
-            reverse: true,
-            physics: const ClampingScrollPhysics(),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              // With reverse: true, display messages from newest to oldest
-              final message = _messages[_messages.length - 1 - index];
-              if (message.isTyping) {
-                return _TypingBubble(isUser: false, sender: message.sender);
-              }
-              return _MessageBubble(
-                message: message.text,
-                isUser: message.isUser,
-                sender: message.sender,
-              );
-            },
-          ),
-        ),
-        _buildInputField(),
-      ],
+    return BlocConsumer<AIChatBloc, AIChatState>(
+      listener: (context, state) {
+        // Auto scroll when new messages arrive
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      },
+      builder: (context, state) {
+        final isLoading = state is AIChatLoading;
+        final isStreaming = state is AIChatStreaming;
+        final messages = state.messages;
+
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 72, 16, 16),
+                controller: _scrollController,
+                reverse: true,
+                physics: const ClampingScrollPhysics(),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  // With reverse: true, display messages from newest to oldest
+                  final message = messages[messages.length - 1 - index];
+                  if (message.isTyping) {
+                    return _TypingBubble(isUser: false, sender: message.sender);
+                  }
+                  return _MessageBubble(
+                    message: message.text,
+                    isUser: message.isUser,
+                    sender: message.sender,
+                    isError: message.isError,
+                    isStreaming: message.isStreaming,
+                    sources: message.sources,
+                  );
+                },
+              ),
+            ),
+            _buildInputField(isLoading, isStreaming),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildInputField() {
+  Widget _buildInputField(bool isLoading, bool isStreaming) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -118,6 +127,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   maxLines: 4,
                   minLines: 1,
                   textInputAction: TextInputAction.newline,
+                  enabled: !isLoading && !isStreaming,
                   decoration: InputDecoration(
                     hintText: 'Hỏi Chat AI',
                     hintStyle: TextStyle(
@@ -133,15 +143,25 @@ class _AIChatPageState extends State<AIChatPage> {
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: _sendMessage,
+              onTap: () {
+                if (isStreaming) {
+                  // Stop streaming
+                  context.read<AIChatBloc>().add(const StopStreaming());
+                } else if (!isLoading) {
+                  // Send message
+                  _sendMessage();
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryButton,
+                  color: isLoading || isStreaming
+                      ? Colors.red.shade400
+                      : AppColors.primaryButton,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.send,
+                  isStreaming ? Icons.pause : Icons.send,
                   color: AppColors.buttonPrimaryText,
                   size: 20,
                 ),
@@ -152,43 +172,23 @@ class _AIChatPageState extends State<AIChatPage> {
       ),
     );
   }
-
-  void _removeExistingTyping() {
-    final typingIndex = _messages.lastIndexWhere((m) => m.isTyping);
-    if (typingIndex != -1) {
-      _messages.removeAt(typingIndex);
-    }
-  }
-
-  String _generateAIResponse(String userText) {
-    // Simple demo response. Replace with real AI call later.
-    return 'AI: Đã nhận câu hỏi của bạn: "$userText"';
-  }
-}
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final String sender;
-  final bool isTyping;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    required this.sender,
-    this.isTyping = false,
-  });
 }
 
 class _MessageBubble extends StatelessWidget {
   final String message;
   final bool isUser;
   final String sender;
+  final bool isError;
+  final bool isStreaming;
+  final List<AIBookSource> sources;
 
   const _MessageBubble({
     required this.message,
     required this.isUser,
     required this.sender,
+    this.isError = false,
+    this.isStreaming = false,
+    this.sources = const [],
   });
 
   @override
@@ -203,13 +203,28 @@ class _MessageBubble extends StatelessWidget {
           if (!isUser)
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 4),
-              child: Text(
-                sender,
-                style: TextStyle(
-                  color: AppColors.subText,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    sender,
+                    style: TextStyle(
+                      color: AppColors.subText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (isStreaming) ...[
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: AppColors.primaryButton,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           Row(
@@ -236,6 +251,8 @@ class _MessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isUser
                         ? AppColors.secondaryButton
+                        : isError
+                        ? Colors.red.shade50
                         : AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
@@ -246,10 +263,10 @@ class _MessageBubble extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Text(
+                  child: SelectableText(
                     message,
                     style: TextStyle(
-                      color: AppColors.bodyText,
+                      color: isError ? Colors.red.shade700 : AppColors.bodyText,
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                     ),
@@ -258,6 +275,52 @@ class _MessageBubble extends StatelessWidget {
               ),
             ],
           ),
+          // Display book sources if available
+          if (!isUser && sources.isNotEmpty && !isStreaming) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                'Sách liên quan:',
+                style: TextStyle(
+                  color: AppColors.subText,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: sources.length,
+              itemBuilder: (context, index) {
+                final source = sources[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : 8,
+                    right: index == sources.length - 1 ? 0 : 0,
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailPage(
+                            bookId: int.parse(source.identifier),
+                            initialCoverUrl: null,
+                          ),
+                        ),
+                      );
+                    },
+                    child: SizedBox(
+                      width: 160,
+                      child: AIBookCard(source: source),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );

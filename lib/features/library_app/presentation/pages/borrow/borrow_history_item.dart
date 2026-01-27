@@ -58,7 +58,7 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
     return BlocBuilder<BorrowTicketBloc, BorrowTicketState>(
       builder: (context, state) {
         final List<TicketItem> items = (state is BorrowTicketDetailLoaded)
-            ? state.ticketDetail.items
+            ? state.ticketDetail.items!
             : [];
         return InkWell(
           onTap: () {
@@ -66,11 +66,10 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) {
-                    return BorrowHistoryDetailPage(
-                      ticket: widget.ticket,
-                      record: state.ticketDetail,
-                    );
+                  builder: (_) {
+                    var detail = widget.ticket;
+                    detail = detail.copyWith(items: items);
+                    return BorrowHistoryDetailPage(record: detail);
                   },
                 ),
               );
@@ -347,11 +346,11 @@ class _BorrowTicketCardState extends State<BorrowTicketCard> {
                     style: TextStyle(fontSize: 14, color: AppColors.subText),
                   ),
                   Text(
-                    'Đã trả: ${widget.ticket.dueDate != null ? formatDate(widget.ticket.dueDate!) : 'N/A'}',
+                    'Đã trả: ${widget.ticket.returnedAt != null ? formatDate(widget.ticket.returnedAt!) : 'N/A'}',
                     style: TextStyle(fontSize: 14, color: AppColors.subText),
                   ),
                   Text(
-                    'Đã mượn: ${widget.ticket.dueDate?.difference(widget.ticket.requestedAt).inDays} ngày',
+                    'Đã mượn: ${widget.ticket.returnedAt?.difference(widget.ticket.pickedUpAt ?? widget.ticket.approvedAt ?? widget.ticket.requestedAt).inDays} ngày',
                     style: TextStyle(fontSize: 14, color: AppColors.subText),
                   ),
                 ] else if (widget.ticket.status == TicketStatus.overdue) ...[

@@ -42,15 +42,14 @@ class RefreshBooksEvent extends BookEvent {
 
 class LoadBookDetailEvent extends BookEvent {
   final int bookId;
-  const LoadBookDetailEvent(this.bookId);
+  final bool? isUniqueId;
+  const LoadBookDetailEvent(this.bookId, {this.isUniqueId});
 
   @override
-  List<Object?> get props => [bookId];
+  List<Object?> get props => [bookId, isUniqueId];
 }
 
 class RefreshBookDetailEvent extends BookEvent {
-  // Cần truyền ID hoặc lấy từ state cũ, ở đây mình giữ nguyên logic cũ của bạn
-  // là lấy từ state nên không cần truyền param
   @override
   List<Object?> get props => [];
 }

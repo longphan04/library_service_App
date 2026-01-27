@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../core/services/data_refresh_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../bloc/book/book_bloc.dart';
 import '../../bloc/borrow/borrow_bloc.dart';
@@ -11,11 +12,13 @@ import '../borrow/borrow_page.dart';
 
 class DetailPage extends StatefulWidget {
   final int bookId;
-  final String initialCoverUrl;
+  final bool? isUniqueId;
+  final String? initialCoverUrl;
 
   const DetailPage({
     super.key,
     required this.bookId,
+    this.isUniqueId,
     required this.initialCoverUrl,
   });
 
@@ -29,7 +32,9 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
-    context.read<BookDetailBloc>().add(LoadBookDetailEvent(widget.bookId));
+    context.read<BookDetailBloc>().add(
+      LoadBookDetailEvent(widget.bookId, isUniqueId: widget.isUniqueId),
+    );
   }
 
   @override
@@ -49,7 +54,7 @@ class _DetailPageState extends State<DetailPage> {
               // Book Image
               ClipRRect(
                 child: CachedNetworkImage(
-                  imageUrl: widget.initialCoverUrl,
+                  imageUrl: widget.initialCoverUrl ?? '',
                   width: double.infinity,
                   fit: BoxFit.cover,
                   imageBuilder: (context, imageProvider) {
@@ -111,23 +116,16 @@ class _DetailPageState extends State<DetailPage> {
                                 ),
                                 textAlign: TextAlign.justify,
                               ),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Còn ${state.bookDetail.availableCopies} cuốn',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                  Text(
-                                    ' | 123 Cuốn đã mượn',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.subText,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                state.bookDetail.availableCopies! > 0
+                                    ? 'Còn sách'
+                                    : 'Hết sách',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: state.bookDetail.availableCopies! > 0
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
                               ),
                             ],
                           ),
@@ -264,42 +262,67 @@ class _DetailPageState extends State<DetailPage> {
         child: Row(
           children: [
             Expanded(
-              child: BlocConsumer<BorrowBloc, BorrowState>(
-                builder: (context, state) {
-                  return MyButton(
-                    text: state is AddBookHoldLoading
-                        ? 'Đang thêm...'
-                        : 'Thêm vào kệ',
-                    onPressed: state is AddBookHoldLoading
-                        ? null
-                        : () {
-                            context.read<BorrowBloc>().add(
-                              AddBookHoldEvent(widget.bookId),
-                            );
-                          },
-                    isReversedColor: true,
+              child: BlocBuilder<BookDetailBloc, BookState>(
+                builder: (context, bookState) {
+                  return BlocConsumer<BorrowBloc, BorrowState>(
+                    builder: (context, state) {
+                      return MyButton(
+                        text: state is AddBookHoldLoading
+                            ? 'Đang thêm...'
+                            : 'Thêm vào kệ',
+                        onPressed:
+                            bookState is BookDetailLoaded &&
+                                bookState.bookDetail.availableCopies! > 0
+                            ? state is AddBookHoldLoading
+                                  ? null
+                                  : () {
+                                      context.read<BorrowBloc>().add(
+                                        AddBookHoldEvent(widget.bookId),
+                                      );
+                                    }
+                            : null,
+                        isReversedColor: true,
+                      );
+                    },
+                    listener: (BuildContext context, BorrowState state) {
+                      if (state is AddBookHoldSuccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Đã thêm sách vào kệ thành công!',
+                            ),
+                            duration: const Duration(
+                              seconds: 1,
+                              milliseconds: 500,
+                            ),
+                          ),
+                        );
+                        context.read<BorrowBloc>().add(RefreshBookHoldsEvent());
+                        // Refresh book detail to update available copies
+                        context.read<BookDetailBloc>().add(
+                          RefreshBookDetailEvent(),
+                        );
+                        // Trigger refresh for all book lists and home
+                        DataRefreshService().triggerBookListRefresh();
+                        DataRefreshService().triggerHomeRefresh();
+                        DataRefreshService().triggerBookHoldRefresh();
+                        // Trigger refresh for all book lists and home
+                        DataRefreshService().triggerBookListRefresh();
+                        DataRefreshService().triggerHomeRefresh();
+                        DataRefreshService().triggerBookHoldRefresh();
+                      } else if (state is AddBookHoldFailure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            duration: const Duration(
+                              seconds: 1,
+                              milliseconds: 500,
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   );
-                },
-                listener: (BuildContext context, BorrowState state) {
-                  if (state is AddBookHoldSuccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Đã thêm sách vào kệ thành công!'),
-                        duration: const Duration(seconds: 1, milliseconds: 500),
-                        behavior: SnackBarBehavior.floating,
-                        margin: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).size.height / 2,
-                          left: 20,
-                          right: 20,
-                        ),
-                      ),
-                    );
-                    context.read<BorrowBloc>().add(RefreshBookHoldsEvent());
-                  } else if (state is AddBookHoldFailure) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Lỗi: ${state.message}')),
-                    );
-                  }
                 },
               ),
             ),
@@ -309,18 +332,27 @@ class _DetailPageState extends State<DetailPage> {
                 builder: (context, state) {
                   return MyButton(
                     text: 'Mượn ngay',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BorrowPage(
-                            book: state is BookDetailLoaded
-                                ? state.bookDetail
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed:
+                        state is BookDetailLoaded &&
+                            state.bookDetail.availableCopies! > 0
+                        ? () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    BorrowPage(book: state.bookDetail),
+                              ),
+                            );
+
+                            // Refresh book detail after returning from borrow page
+                            if (result == true || mounted) {
+                              // ignore: use_build_context_synchronously
+                              context.read<BookDetailBloc>().add(
+                                RefreshBookDetailEvent(),
+                              );
+                            }
+                          }
+                        : null,
                   );
                 },
               ),

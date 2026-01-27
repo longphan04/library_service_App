@@ -18,6 +18,7 @@ class CategoriesPage extends StatelessWidget {
             await Future.delayed(const Duration(milliseconds: 500));
           },
           child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

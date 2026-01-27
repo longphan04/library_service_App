@@ -32,6 +32,7 @@ import '../../features/library_app/domain/usecases/borrow_usecase.dart';
 import '../../features/library_app/domain/usecases/category_usecase.dart';
 import '../../features/library_app/domain/usecases/message_usecase.dart';
 import '../../features/library_app/domain/usecases/profile_usecase.dart';
+import '../../features/library_app/presentation/bloc/message/ai_chat_bloc.dart';
 import '../../features/library_app/presentation/bloc/auth/auth_bloc.dart';
 import '../../features/library_app/presentation/bloc/book/book_bloc.dart';
 import '../../features/library_app/presentation/bloc/book/search_bloc.dart';
@@ -45,6 +46,7 @@ import '../config/dio_config.dart';
 import '../network/auth_interceptor.dart';
 import '../network/network_info.dart';
 import '../network/network_info_impl.dart';
+import '../services/data_refresh_service.dart';
 
 // Service locator / Dependency injection container
 final getIt = GetIt.instance;
@@ -58,6 +60,7 @@ Future<void> initializeDependencies() async {
     storage: FileStorage('${appDocDir.path}/.cookies/'),
   );
   final dio = DioConfig.createDio(cookieJar: cookieJar);
+  final aiDio = AIDioConfig.createDio(); // Separate Dio for AI API
   final connectivity = Connectivity();
 
   // Register dependencies
@@ -65,9 +68,13 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
   getIt.registerSingleton<CookieJar>(cookieJar);
   getIt.registerSingleton(dio);
+  getIt.registerSingleton<Dio>(aiDio, instanceName: 'aiDio');
 
   // Network Info
   getIt.registerSingleton<INetworkInfo>(NetworkInfoImpl(connectivity));
+
+  // Data Refresh Service (singleton for real-time updates)
+  getIt.registerSingleton<DataRefreshService>(DataRefreshService());
 
   // Datasources/remote
   getIt.registerSingleton<AuthRemoteDatasource>(
@@ -86,7 +93,10 @@ Future<void> initializeDependencies() async {
     BorrowRemoteDatasourceImpl(dio: getIt<Dio>()),
   );
   getIt.registerSingleton<MessageRemoteDataSource>(
-    MessageRemoteDataSourceImpl(dio: getIt<Dio>()),
+    MessageRemoteDataSourceImpl(
+      dio: getIt<Dio>(),
+      aiDio: getIt<Dio>(instanceName: 'aiDio'),
+    ),
   );
 
   // Datasources/local
@@ -183,6 +193,9 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<GetRecommendedBooksUseCase>(
     GetRecommendedBooksUseCase(getIt<BookRepository>()),
   );
+  getIt.registerSingleton<GetBookByIdUseCase>(
+    GetBookByIdUseCase(getIt<BookRepository>()),
+  );
 
   // UseCases/borrow
   getIt.registerSingleton<GetBookHoldsUseCase>(
@@ -225,6 +238,12 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<MarkAllAsReadUseCase>(
     MarkAllAsReadUseCase(getIt<MessageRepository>()),
   );
+  getIt.registerSingleton<SendAIChatMessageUseCase>(
+    SendAIChatMessageUseCase(getIt<MessageRepository>()),
+  );
+  getIt.registerSingleton<ClearAIChatHistoryUseCase>(
+    ClearAIChatHistoryUseCase(getIt<MessageRepository>()),
+  );
 
   // Blocs
   getIt.registerSingleton<AuthBloc>(
@@ -249,7 +268,7 @@ Future<void> initializeDependencies() async {
   );
   getIt.registerSingleton<BookBloc>(BookBloc(getIt<GetAllBooksUseCase>()));
   getIt.registerSingleton<BookDetailBloc>(
-    BookDetailBloc(getIt<GetBookDetailsUseCase>()),
+    BookDetailBloc(getIt<GetBookDetailsUseCase>(), getIt<GetBookByIdUseCase>()),
   );
   getIt.registerSingleton<HomeBloc>(
     HomeBloc(
@@ -285,6 +304,12 @@ Future<void> initializeDependencies() async {
       getNotificationsUseCase: getIt<GetNotificationsUseCase>(),
       getUnreadCountUseCase: getIt<GetUnreadCountUseCase>(),
       markAllAsReadUseCase: getIt<MarkAllAsReadUseCase>(),
+    ),
+  );
+  getIt.registerSingleton<AIChatBloc>(
+    AIChatBloc(
+      sendAIChatMessageUseCase: getIt<SendAIChatMessageUseCase>(),
+      clearAIChatHistoryUseCase: getIt<ClearAIChatHistoryUseCase>(),
     ),
   );
 }

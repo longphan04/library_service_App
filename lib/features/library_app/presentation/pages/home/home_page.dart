@@ -85,8 +85,12 @@ class _HomePageState extends State<HomePage> {
 
                     ListBooks(books: state.newestBooks),
                     const SizedBox(height: 20),
-                    SectionHeader(title: 'Đề xuất', color: Colors.blue),
-                    ListBooks(books: state.recommendedBooks),
+
+                    // Only show recommended section if there are recommended books
+                    if (state.recommendedBooks.isNotEmpty) ...[
+                      SectionHeader(title: 'Đề xuất', color: Colors.blue),
+                      ListBooks(books: state.recommendedBooks),
+                    ],
                   ],
                 ),
               ),

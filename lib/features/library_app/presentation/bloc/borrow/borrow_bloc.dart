@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/services/data_refresh_service.dart';
 import '../../../../../core/utils/error_handler.dart';
 import '../../../domain/entities/book_hold.dart';
 import '../../../domain/usecases/borrow_usecase.dart';
@@ -15,6 +18,7 @@ class BorrowBloc extends Bloc<BorrowEvent, BorrowState> {
   final RemoveBookHoldUseCase removeBookHoldUseCase;
   final BorrowNowUseCase borrowNowUseCase;
   final BorrowFromHoldsUseCase borrowFromHoldsUseCase;
+  StreamSubscription<void>? _refreshSubscription;
 
   BorrowBloc(
     this.getBookHoldsUseCase,
@@ -29,6 +33,11 @@ class BorrowBloc extends Bloc<BorrowEvent, BorrowState> {
     on<RemoveBookHoldEvent>(_onRemoveBookHold);
     on<BorrowNowEvent>(_onBorrowNow);
     on<BorrowFromHoldsEvent>(_onBorrowFromHolds);
+
+    // Subscribe to book hold refresh events
+    _refreshSubscription = DataRefreshService().onBookHoldRefresh.listen((_) {
+      add(RefreshBookHoldsEvent());
+    });
   }
 
   Future<void> _onLoadBookHolds(
@@ -129,8 +138,13 @@ class BorrowBloc extends Bloc<BorrowEvent, BorrowState> {
       final error = ErrorHandler.getErrorMessage(e);
       emit(BorrowFailure(error, e));
     } catch (e) {
-      print('Lỗi khi tạo phiếu mượn sách: ${e.toString()}');
       emit(BorrowFailure('Lỗi khi tạo phiếu mượn sách: ${e.toString()}', e));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _refreshSubscription?.cancel();
+    return super.close();
   }
 }

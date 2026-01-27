@@ -23,9 +23,18 @@ TicketModel _$TicketModelFromJson(Map<String, dynamic> json) => TicketModel(
   dueDate: json['due_date'] == null
       ? null
       : DateTime.parse(json['due_date'] as String),
+  returnedAt: json['returned_at'] == null
+      ? null
+      : DateTime.parse(json['returned_at'] as String),
+  cancelledAt: json['cancelled_at'] == null
+      ? null
+      : DateTime.parse(json['cancelled_at'] as String),
   renewCount: (json['renew_count'] as num).toInt(),
-  isOverdue: json['is_overdue'] as bool,
-  overdueDays: (json['overdue_days'] as num).toInt(),
+  isOverdue: json['is_overdue'] as bool?,
+  overdueDays: (json['overdue_days'] as num?)?.toInt(),
+  items: (json['items'] as List<dynamic>?)
+      ?.map((e) => TicketItemModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$TicketModelToJson(TicketModel instance) =>
@@ -38,9 +47,12 @@ Map<String, dynamic> _$TicketModelToJson(TicketModel instance) =>
       'pickup_expires_at': instance.pickupExpiresAt?.toIso8601String(),
       'picked_up_at': instance.pickedUpAt?.toIso8601String(),
       'due_date': instance.dueDate?.toIso8601String(),
+      'returned_at': instance.returnedAt?.toIso8601String(),
+      'cancelled_at': instance.cancelledAt?.toIso8601String(),
       'renew_count': instance.renewCount,
       'is_overdue': instance.isOverdue,
       'overdue_days': instance.overdueDays,
+      'items': instance.items,
     };
 
 TicketListModel _$TicketListModelFromJson(Map<String, dynamic> json) =>
@@ -56,48 +68,10 @@ TicketListModel _$TicketListModelFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$TicketListModelToJson(TicketListModel instance) =>
     <String, dynamic>{'data': instance.data, 'pagination': instance.pagination};
 
-TicketDetailModel _$TicketDetailModelFromJson(Map<String, dynamic> json) =>
-    TicketDetailModel(
-      ticketId: (json['ticket_id'] as num).toInt(),
-      ticketCode: json['ticket_code'] as String,
-      status: json['status'] as String,
-      requestedAt: DateTime.parse(json['requested_at'] as String),
-      approvedAt: json['approved_at'] == null
-          ? null
-          : DateTime.parse(json['approved_at'] as String),
-      pickupExpiresAt: json['pickup_expires_at'] == null
-          ? null
-          : DateTime.parse(json['pickup_expires_at'] as String),
-      pickedUpAt: json['picked_up_at'] == null
-          ? null
-          : DateTime.parse(json['picked_up_at'] as String),
-      dueDate: json['due_date'] == null
-          ? null
-          : DateTime.parse(json['due_date'] as String),
-      renewCount: (json['renew_count'] as num).toInt(),
-      items: (json['items'] as List<dynamic>)
-          .map((e) => TicketItemModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-
-Map<String, dynamic> _$TicketDetailModelToJson(TicketDetailModel instance) =>
-    <String, dynamic>{
-      'ticket_id': instance.ticketId,
-      'ticket_code': instance.ticketCode,
-      'status': instance.status,
-      'requested_at': instance.requestedAt.toIso8601String(),
-      'approved_at': instance.approvedAt?.toIso8601String(),
-      'pickup_expires_at': instance.pickupExpiresAt?.toIso8601String(),
-      'picked_up_at': instance.pickedUpAt?.toIso8601String(),
-      'due_date': instance.dueDate?.toIso8601String(),
-      'renew_count': instance.renewCount,
-      'items': instance.items,
-    };
-
 TicketDetailResponseModel _$TicketDetailResponseModelFromJson(
   Map<String, dynamic> json,
 ) => TicketDetailResponseModel(
-  data: TicketDetailModel.fromJson(json['data'] as Map<String, dynamic>),
+  data: TicketModel.fromJson(json['data'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$TicketDetailResponseModelToJson(

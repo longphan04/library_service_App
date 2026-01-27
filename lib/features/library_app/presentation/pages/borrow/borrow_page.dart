@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/services/data_refresh_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/date_formatter.dart';
 import '../../../domain/entities/book.dart';
@@ -205,42 +206,27 @@ class _BorrowPageState extends State<BorrowPage> {
                               ),
                               const SizedBox(width: 10),
                               const Text(
-                                'Trả sách vào',
+                                'Trả sách vào: ',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.bodyText,
                                 ),
                               ),
-                              const Spacer(),
-                              const Icon(
-                                Icons.calendar_month_outlined,
-                                color: AppColors.icon,
+                              Text(
+                                formatDate(
+                                  DateTime.now().add(const Duration(days: 10)),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
+                              const Spacer(),
                             ],
                           ),
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.symmetric(vertical: 10.0),
-                            padding: const EdgeInsets.all(10.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: AppColors.primaryButton,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              formatDate(
-                                DateTime.now().add(const Duration(days: 14)),
-                              ),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
+                          const SizedBox(height: 10),
                           const Text(
-                            'Bạn sẽ được mượn sách trong khoảng 14 ngày.',
+                            'Bạn sẽ được mượn sách trong khoảng 10 ngày.',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.subText,
@@ -303,9 +289,12 @@ class _BorrowPageState extends State<BorrowPage> {
         child: BlocConsumer<BorrowBloc, BorrowState>(
           listener: (context, state) async {
             if (state is BorrowFailure) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  duration: Duration(seconds: 1, milliseconds: 500),
+                ),
+              );
             }
             if (state is BorrowSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -314,25 +303,39 @@ class _BorrowPageState extends State<BorrowPage> {
                   duration: Duration(seconds: 1),
                 ),
               );
-              if (widget.book == null) {
-                context.read<BorrowBloc>().add(RefreshBookHoldsEvent());
+
+              context.read<BorrowBloc>().add(RefreshBookHoldsEvent());
+
+              if (widget.book != null) {
+                DataRefreshService().triggerBookDetailRefresh(
+                  widget.book!.bookId,
+                );
               }
-              Navigator.of(context).pop();
+              // Trigger refresh for book lists and home
+              DataRefreshService().triggerBookListRefresh();
+              DataRefreshService().triggerHomeRefresh();
+              Navigator.of(context).pop(true);
             }
           },
           builder: (context, state) {
             return MyButton(
               text: state is BorrowLoading ? 'Đang xử lý...' : 'Xác nhận',
-              onPressed: () {
-                if (widget.book != null) {
-                  context.read<BorrowBloc>().add(
-                    BorrowNowEvent(widget.book!.bookId),
-                  );
-                } else {
-                  final holdIds = _currentHolds.map((h) => h.holdId).toList();
-                  context.read<BorrowBloc>().add(BorrowFromHoldsEvent(holdIds));
-                }
-              },
+              onPressed: state is BorrowLoading
+                  ? null
+                  : () {
+                      if (widget.book != null) {
+                        context.read<BorrowBloc>().add(
+                          BorrowNowEvent(widget.book!.bookId),
+                        );
+                      } else {
+                        final holdIds = _currentHolds
+                            .map((h) => h.holdId)
+                            .toList();
+                        context.read<BorrowBloc>().add(
+                          BorrowFromHoldsEvent(holdIds),
+                        );
+                      }
+                    },
             );
           },
         ),

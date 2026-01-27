@@ -1,16 +1,85 @@
 import 'package:dio/dio.dart';
+import '../../models/ai_chat_response_model.dart';
 import '../../models/notification_model.dart';
 
 abstract class MessageRemoteDataSource {
+  // Notifications
   Future<List<NotificationModel>> fetchNotifications();
   Future<int> fetchUnreadCount();
   Future<void> markAllAsRead();
+
+  // AI Chat
+  Future<AIChatResponseModel> sendMessage({
+    required String message,
+    String? sessionId,
+    int topK = 5,
+  });
+
+  Future<void> clearChatHistory(String sessionId);
 }
 
 class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   final Dio dio;
+  final Dio aiDio;
 
-  MessageRemoteDataSourceImpl({required this.dio});
+  MessageRemoteDataSourceImpl({required this.dio, required this.aiDio});
+
+  @override
+  Future<AIChatResponseModel> sendMessage({
+    required String message,
+    String? sessionId,
+    int topK = 5,
+  }) async {
+    try {
+      final response = await aiDio.post(
+        '/ai/chat',
+        data: {
+          'message': message,
+          'top_k': topK,
+          if (sessionId != null) 'session_id': sessionId,
+        },
+      );
+
+      if (response.statusCode! >= 400) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
+      }
+
+      final responseData = response.data;
+      if (responseData['status'] == 'success') {
+        return AIChatResponseModel.fromJson(responseData);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          message: 'AI response failed',
+        );
+      }
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> clearChatHistory(String sessionId) async {
+    try {
+      final response = await aiDio.delete('/ai/chat/history/$sessionId');
+
+      if (response.statusCode! >= 400) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
+      }
+    } on DioException {
+      rethrow;
+    }
+  }
 
   @override
   Future<List<NotificationModel>> fetchNotifications() async {

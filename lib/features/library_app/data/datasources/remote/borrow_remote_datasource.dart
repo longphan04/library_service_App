@@ -10,8 +10,12 @@ abstract class BorrowRemoteDatasource {
   Future<void> borrowFromHolds(List<int> holdIds);
 
   // history
-  Future<TicketListModel> fetchBorrowTickets();
-  Future<TicketDetailModel> fetchBorrowTicketDetail(int ticketId);
+  Future<TicketListModel> fetchBorrowTickets({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  });
+  Future<TicketModel> fetchBorrowTicketDetail(int ticketId);
   Future<void> cancelBorrowTicket(int ticketId);
   Future<void> renewBorrowTicket(int ticketId);
 }
@@ -169,9 +173,22 @@ class BorrowRemoteDatasourceImpl implements BorrowRemoteDatasource {
   }
 
   @override
-  Future<TicketListModel> fetchBorrowTickets() async {
+  Future<TicketListModel> fetchBorrowTickets({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) async {
     try {
-      final response = await dio.get('/borrow-ticket/me');
+      final Map<String, dynamic> queryParams = {'page': page, 'limit': limit};
+
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      final response = await dio.get(
+        '/borrow-ticket/me',
+        queryParameters: queryParams,
+      );
 
       if (response.statusCode! >= 400) {
         throw DioException(
@@ -188,7 +205,7 @@ class BorrowRemoteDatasourceImpl implements BorrowRemoteDatasource {
   }
 
   @override
-  Future<TicketDetailModel> fetchBorrowTicketDetail(int ticketId) async {
+  Future<TicketModel> fetchBorrowTicketDetail(int ticketId) async {
     try {
       final response = await dio.get('/borrow-ticket/$ticketId');
 

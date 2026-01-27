@@ -78,6 +78,7 @@ class MyApp extends StatelessWidget {
         },
         child: MaterialApp(
           navigatorKey: navigatorKey,
+          navigatorObservers: [MainPage.routeObserver],
           debugShowCheckedModeBanner: false,
           theme: ThemeData(useMaterial3: true),
           home: const AuthWrapper(),

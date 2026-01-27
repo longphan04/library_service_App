@@ -182,16 +182,22 @@ class _ProfilePageState extends State<ProfilePage> {
             if (_isUpdating) {
               _isUpdating = false;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cập nhật thành công')),
+                const SnackBar(
+                  content: Text('Cập nhật thành công'),
+                  duration: Duration(seconds: 1, milliseconds: 500),
+                ),
               );
             }
           }
 
           if (profileState is ProfileFailure && _isUpdating) {
             _isUpdating = false;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(profileState.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(profileState.message),
+                duration: const Duration(seconds: 1, milliseconds: 500),
+              ),
+            );
           }
         },
         builder: (context, profileState) {

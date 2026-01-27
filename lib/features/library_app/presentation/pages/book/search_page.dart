@@ -121,11 +121,24 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  String _buildHeaderTitle() {
+  String _buildHeaderTitle(BookState state) {
+    int? totalItems;
+    if (state is ListBooksLoaded) {
+      totalItems = state.pagination.totalItems;
+    } else if (state is ListBooksLoadingMore) {
+      totalItems = state.previousState.pagination.totalItems;
+    }
+
     switch (widget.searchType) {
       case SearchType.query:
+        if (totalItems != null) {
+          return '$totalItems kết quả của: ${widget.query ?? ""}';
+        }
         return 'Kết quả của: ${widget.query ?? ""}';
       case SearchType.category:
+        if (totalItems != null) {
+          return '${widget.categoryName ?? 'Danh mục'} ($totalItems)';
+        }
         return widget.categoryName ?? 'Danh mục';
       case SearchType.viewAll:
         return widget.customTitle ?? 'Tất cả sách';
@@ -142,13 +155,13 @@ class _SearchPageState extends State<SearchPage> {
         );
       case SearchType.category:
         return const TextStyle(
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           color: AppColors.titleText,
         );
       case SearchType.viewAll:
         return const TextStyle(
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           color: AppColors.titleText,
         );
@@ -178,7 +191,7 @@ class _SearchPageState extends State<SearchPage> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(child: _buildHeader()),
+                  SliverToBoxAdapter(child: _buildHeader(state)),
                   if (state is ListBooksLoading)
                     const SliverFillRemaining(
                       child: Center(child: CircularProgressIndicator()),
@@ -221,7 +234,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BookState state) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
@@ -229,7 +242,7 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Expanded(
             child: Text(
-              _buildHeaderTitle(),
+              _buildHeaderTitle(state),
               style: _buildHeaderStyle(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

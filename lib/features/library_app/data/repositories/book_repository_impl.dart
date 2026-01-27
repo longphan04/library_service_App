@@ -9,6 +9,16 @@ class BookRepositoryImpl implements BookRepository {
   BookRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<Book> getBookById(String id) async {
+    try {
+      final bookModel = await remoteDataSource.getBookById(id);
+      return bookModel.toEntity();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<List<Book>> getRecommendedBooks() async {
     try {
       final booksListModel = await remoteDataSource.getRecommendedBooks();

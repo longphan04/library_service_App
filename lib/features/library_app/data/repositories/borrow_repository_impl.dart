@@ -74,9 +74,17 @@ class BorrowRepositoryImpl implements BorrowRepository {
   }
 
   @override
-  Future<(List<Ticket>, Pagination)> getBorrowTickets() async {
+  Future<(List<Ticket>, Pagination)> getBorrowTickets({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) async {
     try {
-      final ticketListModel = await remoteDatasource.fetchBorrowTickets();
+      final ticketListModel = await remoteDatasource.fetchBorrowTickets(
+        page: page,
+        limit: limit,
+        status: status,
+      );
       final tickets = ticketListModel.data
           .map((model) => model.toEntity())
           .toList();
@@ -88,12 +96,12 @@ class BorrowRepositoryImpl implements BorrowRepository {
   }
 
   @override
-  Future<TicketDetail> getBorrowTicketDetail(int ticketId) async {
+  Future<Ticket> getBorrowTicketDetail(int ticketId) async {
     try {
-      final ticketDetailModel = await remoteDatasource.fetchBorrowTicketDetail(
+      final ticketModel = await remoteDatasource.fetchBorrowTicketDetail(
         ticketId,
       );
-      return ticketDetailModel.toEntity();
+      return ticketModel.toEntity();
     } catch (e) {
       rethrow;
     }

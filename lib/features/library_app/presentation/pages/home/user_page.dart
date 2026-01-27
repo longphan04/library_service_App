@@ -6,6 +6,7 @@ import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/profile/profile_bloc.dart';
 import '../../widgets/navigation_item.dart';
 import '../borrow/borrow_history_page.dart';
+import '../messages/message_page.dart';
 import '../profile/profile_page.dart';
 import 'blank_page.dart';
 
@@ -198,7 +199,7 @@ class _UserPageContent extends StatelessWidget {
                       NavigationItem(
                         icon: Icons.notifications_none_outlined,
                         title: 'Thông báo',
-                        page: const BlankPage(),
+                        page: const MessagePage(),
                       ),
                     ],
                   ),

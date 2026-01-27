@@ -11,9 +11,13 @@ class Ticket extends Equatable {
   final DateTime? pickupExpiresAt;
   final DateTime? pickedUpAt;
   final DateTime? dueDate;
+  final DateTime? returnedAt;
+  final DateTime? cancelledAt;
   final int renewCount;
+
   final bool isOverdue;
   final int overdueDays;
+  final List<TicketItem>? items;
 
   const Ticket({
     required this.id,
@@ -24,9 +28,12 @@ class Ticket extends Equatable {
     this.pickupExpiresAt,
     this.pickedUpAt,
     this.dueDate,
+    this.returnedAt,
+    this.cancelledAt,
     required this.renewCount,
-    required this.isOverdue,
-    required this.overdueDays,
+    this.isOverdue = false,
+    this.overdueDays = 0,
+    this.items,
   });
 
   @override
@@ -39,50 +46,47 @@ class Ticket extends Equatable {
     pickupExpiresAt,
     pickedUpAt,
     dueDate,
+    returnedAt,
+    cancelledAt,
     renewCount,
     isOverdue,
     overdueDays,
-  ];
-}
-
-class TicketDetail extends Equatable {
-  final int id;
-  final String code;
-  final TicketStatus status;
-  final DateTime requestedAt;
-  final DateTime? approvedAt;
-  final DateTime? pickupExpiresAt;
-  final DateTime? pickedUpAt;
-  final DateTime? dueDate;
-  final int renewCount;
-  final List<TicketItem> items;
-
-  const TicketDetail({
-    required this.id,
-    required this.code,
-    required this.status,
-    required this.requestedAt,
-    this.approvedAt,
-    this.pickupExpiresAt,
-    this.pickedUpAt,
-    this.dueDate,
-    required this.renewCount,
-    required this.items,
-  });
-
-  @override
-  List<Object?> get props => [
-    id,
-    code,
-    status,
-    requestedAt,
-    approvedAt,
-    pickupExpiresAt,
-    pickedUpAt,
-    dueDate,
-    renewCount,
     items,
   ];
+
+  Ticket copyWith({
+    int? id,
+    String? code,
+    TicketStatus? status,
+    DateTime? requestedAt,
+    DateTime? approvedAt,
+    DateTime? pickupExpiresAt,
+    DateTime? pickedUpAt,
+    DateTime? dueDate,
+    DateTime? returnedAt,
+    DateTime? cancelledAt,
+    int? renewCount,
+    bool? isOverdue,
+    int? overdueDays,
+    List<TicketItem>? items,
+  }) {
+    return Ticket(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      status: status ?? this.status,
+      requestedAt: requestedAt ?? this.requestedAt,
+      approvedAt: approvedAt ?? this.approvedAt,
+      pickupExpiresAt: pickupExpiresAt ?? this.pickupExpiresAt,
+      pickedUpAt: pickedUpAt ?? this.pickedUpAt,
+      dueDate: dueDate ?? this.dueDate,
+      returnedAt: returnedAt ?? this.returnedAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      renewCount: renewCount ?? this.renewCount,
+      isOverdue: isOverdue ?? this.isOverdue,
+      overdueDays: overdueDays ?? this.overdueDays,
+      items: items ?? this.items,
+    );
+  }
 }
 
 class TicketItem extends Equatable {

@@ -7,8 +7,16 @@ class GetBorrowTicketsUseCase {
 
   GetBorrowTicketsUseCase(this.repository);
 
-  Future<(List<Ticket>, Pagination)> call() {
-    return repository.getBorrowTickets();
+  Future<(List<Ticket>, Pagination)> call({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) {
+    return repository.getBorrowTickets(
+      page: page,
+      limit: limit,
+      status: status,
+    );
   }
 }
 
@@ -17,7 +25,7 @@ class GetBorrowTicketDetailUseCase {
 
   GetBorrowTicketDetailUseCase(this.repository);
 
-  Future<TicketDetail> call(int ticketId) {
+  Future<Ticket> call(int ticketId) {
     return repository.getBorrowTicketDetail(ticketId);
   }
 }

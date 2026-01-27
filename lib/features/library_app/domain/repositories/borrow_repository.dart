@@ -10,8 +10,12 @@ abstract class BorrowRepository {
   Future<void> borrowFromHolds(List<int> holdIds);
 
   // history
-  Future<(List<Ticket>, Pagination)> getBorrowTickets();
-  Future<TicketDetail> getBorrowTicketDetail(int ticketId);
+  Future<(List<Ticket>, Pagination)> getBorrowTickets({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  });
+  Future<Ticket> getBorrowTicketDetail(int ticketId);
   Future<void> cancelBorrowTicket(int ticketId);
   Future<void> renewBorrowTicket(int ticketId);
 }
