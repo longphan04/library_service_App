@@ -55,3 +55,25 @@ class LogoutEvent extends AuthEvent {
   @override
   List<Object?> get props => [];
 }
+
+class ForgotPasswordEvent extends AuthEvent {
+  final String email;
+
+  const ForgotPasswordEvent({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
+class ChangePasswordEvent extends AuthEvent {
+  final String currentPassword;
+  final String newPassword;
+
+  const ChangePasswordEvent({
+    required this.currentPassword,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object?> get props => [currentPassword, newPassword];
+}

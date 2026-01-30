@@ -163,6 +163,12 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<GetUserDataUseCase>(
     GetUserDataUseCase(getIt<AuthRepository>()),
   );
+  getIt.registerSingleton<ForgotPasswordUseCase>(
+    ForgotPasswordUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerSingleton<ChangePasswordUseCase>(
+    ChangePasswordUseCase(getIt<AuthRepository>()),
+  );
 
   // UseCases/profile
   getIt.registerSingleton<GetProfileUsecase>(
@@ -193,8 +199,8 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<GetRecommendedBooksUseCase>(
     GetRecommendedBooksUseCase(getIt<BookRepository>()),
   );
-  getIt.registerSingleton<GetBookByIdUseCase>(
-    GetBookByIdUseCase(getIt<BookRepository>()),
+  getIt.registerSingleton<GetBooksByIdUseCase>(
+    GetBooksByIdUseCase(getIt<BookRepository>()),
   );
 
   // UseCases/borrow
@@ -254,6 +260,8 @@ Future<void> initializeDependencies() async {
       isLoggedInUseCase: getIt<IsLoggedInUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
       getUserDataUseCase: getIt<GetUserDataUseCase>(),
+      forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
+      changePasswordUseCase: getIt<ChangePasswordUseCase>(),
     ),
   );
   getIt.registerSingleton<ProfileBloc>(
@@ -266,9 +274,13 @@ Future<void> initializeDependencies() async {
   getIt.registerSingleton<CategoryBloc>(
     CategoryBloc(getCategoriesUseCase: getIt<GetCategoriesUseCase>()),
   );
+  // Factory để tạo instance mới mỗi lần (tránh "Cannot add new events after calling close")
+  getIt.registerFactory<BookAIBloc>(
+    () => BookAIBloc(getIt<GetBooksByIdUseCase>()),
+  );
   getIt.registerSingleton<BookBloc>(BookBloc(getIt<GetAllBooksUseCase>()));
   getIt.registerSingleton<BookDetailBloc>(
-    BookDetailBloc(getIt<GetBookDetailsUseCase>(), getIt<GetBookByIdUseCase>()),
+    BookDetailBloc(getIt<GetBookDetailsUseCase>()),
   );
   getIt.registerSingleton<HomeBloc>(
     HomeBloc(

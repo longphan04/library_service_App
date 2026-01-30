@@ -19,6 +19,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final IsLoggedInUseCase isLoggedInUseCase;
   final LogoutUseCase logoutUseCase;
   final GetUserDataUseCase getUserDataUseCase;
+  final ForgotPasswordUseCase forgotPasswordUseCase;
+  final ChangePasswordUseCase changePasswordUseCase;
 
   AuthBloc({
     required this.loginUseCase,
@@ -27,12 +29,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.isLoggedInUseCase,
     required this.logoutUseCase,
     required this.getUserDataUseCase,
+    required this.forgotPasswordUseCase,
+    required this.changePasswordUseCase,
   }) : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
     on<VerifyOtpEvent>(_onVerifyOtp);
     on<CheckLoginStatusEvent>(_onCheckLoginStatus);
     on<LogoutEvent>(_onLogout);
+    on<ForgotPasswordEvent>(_onForgotPassword);
+    on<ChangePasswordEvent>(_onChangePassword);
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -115,6 +121,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(Unauthenticated());
     } catch (e) {
       emit(LoginFailure('Lỗi đăng xuất', e));
+    }
+  }
+
+  Future<void> _onForgotPassword(
+    ForgotPasswordEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(ForgotPasswordLoading());
+    try {
+      await forgotPasswordUseCase(event.email);
+      emit(ForgotPasswordSuccess());
+    } on DioException catch (e) {
+      final message = ErrorHandler.getErrorMessage(e);
+      emit(ForgotPasswordFailure(message, e));
+    } catch (e) {
+      emit(ForgotPasswordFailure('Lỗi không xác định', e));
+    }
+  }
+
+  Future<void> _onChangePassword(
+    ChangePasswordEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(ChangePasswordLoading());
+    try {
+      await changePasswordUseCase(event.currentPassword, event.newPassword);
+      emit(ChangePasswordSuccess());
+      // Re-emit Authenticated to maintain login state
+      final userData = await getUserDataUseCase();
+      emit(Authenticated(user: userData));
+    } on DioException catch (e) {
+      final message = ErrorHandler.getErrorMessage(e);
+      emit(ChangePasswordFailure(message, e));
+    } catch (e) {
+      emit(ChangePasswordFailure('Lỗi không xác định', e));
     }
   }
 }

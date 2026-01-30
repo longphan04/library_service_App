@@ -12,13 +12,11 @@ import '../borrow/borrow_page.dart';
 
 class DetailPage extends StatefulWidget {
   final int bookId;
-  final bool? isUniqueId;
   final String? initialCoverUrl;
 
   const DetailPage({
     super.key,
     required this.bookId,
-    this.isUniqueId,
     required this.initialCoverUrl,
   });
 
@@ -32,9 +30,7 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
-    context.read<BookDetailBloc>().add(
-      LoadBookDetailEvent(widget.bookId, isUniqueId: widget.isUniqueId),
-    );
+    context.read<BookDetailBloc>().add(LoadBookDetailEvent(widget.bookId));
   }
 
   @override
@@ -52,37 +48,45 @@ class _DetailPageState extends State<DetailPage> {
           child: Column(
             children: [
               // Book Image
-              ClipRRect(
-                child: CachedNetworkImage(
-                  imageUrl: widget.initialCoverUrl ?? '',
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  imageBuilder: (context, imageProvider) {
-                    return Image(
-                      image: imageProvider,
+              BlocBuilder<BookDetailBloc, BookState>(
+                builder: (context, state) {
+                  return ClipRRect(
+                    child: CachedNetworkImage(
+                      imageUrl:
+                          widget.initialCoverUrl ??
+                          (state is BookDetailLoaded
+                              ? state.bookDetail.coverUrl ?? ''
+                              : ''),
                       width: double.infinity,
                       fit: BoxFit.cover,
-                    );
-                  },
-                  placeholder: (context, url) => Container(
-                    width: double.infinity,
-                    height: 300,
-                    color: Colors.grey[300],
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: double.infinity,
-                    height: 300,
-                    color: AppColors.hover,
-                    child: Center(
-                      child: Icon(
-                        Icons.book,
-                        color: AppColors.buttonPrimaryText,
-                        size: 60,
+                      imageBuilder: (context, imageProvider) {
+                        return Image(
+                          image: imageProvider,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                      placeholder: (context, url) => Container(
+                        width: double.infinity,
+                        height: 300,
+                        color: Colors.grey[300],
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        width: double.infinity,
+                        height: 300,
+                        color: AppColors.hover,
+                        child: Center(
+                          child: Icon(
+                            Icons.book,
+                            color: AppColors.buttonPrimaryText,
+                            size: 60,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
               BlocBuilder<BookDetailBloc, BookState>(
                 builder: (context, state) {

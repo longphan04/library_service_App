@@ -65,18 +65,11 @@ TicketListModel _$TicketListModelFromJson(Map<String, dynamic> json) =>
       ),
     );
 
-Map<String, dynamic> _$TicketListModelToJson(TicketListModel instance) =>
-    <String, dynamic>{'data': instance.data, 'pagination': instance.pagination};
-
 TicketDetailResponseModel _$TicketDetailResponseModelFromJson(
   Map<String, dynamic> json,
 ) => TicketDetailResponseModel(
   data: TicketModel.fromJson(json['data'] as Map<String, dynamic>),
 );
-
-Map<String, dynamic> _$TicketDetailResponseModelToJson(
-  TicketDetailResponseModel instance,
-) => <String, dynamic>{'data': instance.data};
 
 TicketItemModel _$TicketItemModelFromJson(Map<String, dynamic> json) =>
     TicketItemModel(
@@ -85,21 +78,11 @@ TicketItemModel _$TicketItemModelFromJson(Map<String, dynamic> json) =>
       book: TicketBookModel.fromJson(json['book'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$TicketItemModelToJson(TicketItemModel instance) =>
-    <String, dynamic>{
-      'status': instance.status,
-      'copy': instance.copy,
-      'book': instance.book,
-    };
-
 TicketCopyModel _$TicketCopyModelFromJson(Map<String, dynamic> json) =>
     TicketCopyModel(
       id: (json['id'] as num).toInt(),
       note: json['note'] as String,
     );
-
-Map<String, dynamic> _$TicketCopyModelToJson(TicketCopyModel instance) =>
-    <String, dynamic>{'id': instance.id, 'note': instance.note};
 
 TicketBookModel _$TicketBookModelFromJson(Map<String, dynamic> json) =>
     TicketBookModel(
@@ -107,10 +90,3 @@ TicketBookModel _$TicketBookModelFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String,
       coverUrl: json['cover_url'] as String?,
     );
-
-Map<String, dynamic> _$TicketBookModelToJson(TicketBookModel instance) =>
-    <String, dynamic>{
-      'book_id': instance.bookId,
-      'title': instance.title,
-      'cover_url': instance.coverUrl,
-    };

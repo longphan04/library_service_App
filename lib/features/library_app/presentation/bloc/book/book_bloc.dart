@@ -13,6 +13,40 @@ import '../../../domain/usecases/book_usecase.dart';
 part 'book_event.dart';
 part 'book_state.dart';
 
+class BookAIBloc extends Bloc<BookEvent, BookState> {
+  final GetBooksByIdUseCase getBooksByIdUseCase;
+
+  BookAIBloc(this.getBooksByIdUseCase) : super(BookInitial()) {
+    on<LoadBooksByIdEvent>(_onLoadBooksById);
+  }
+
+  Future<void> _onLoadBooksById(
+    LoadBooksByIdEvent event,
+    Emitter<BookState> emit,
+  ) async {
+    emit(ListBooksLoading());
+    try {
+      final books = await getBooksByIdUseCase(event.ids);
+      emit(
+        ListBooksLoaded(
+          books,
+          Pagination(
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: books.length,
+            pageSize: books.length,
+          ),
+        ),
+      );
+    } on DioException catch (e) {
+      final error = ErrorHandler.getErrorMessage(e);
+      emit(ListBooksFailure(error, e));
+    } catch (e) {
+      emit(ListBooksFailure('Lỗi khi tải danh sách sách', e));
+    }
+  }
+}
+
 class BookBloc extends Bloc<BookEvent, BookState> {
   final GetAllBooksUseCase getAllBooksUseCase;
   StreamSubscription<void>? _refreshSubscription;
@@ -123,12 +157,10 @@ class BookBloc extends Bloc<BookEvent, BookState> {
 
 class BookDetailBloc extends Bloc<BookEvent, BookState> {
   final GetBookDetailsUseCase getBookDetailUseCase;
-  final GetBookByIdUseCase getBookByIdUseCase;
   StreamSubscription<int>? _refreshSubscription;
   int? _currentBookId;
 
-  BookDetailBloc(this.getBookDetailUseCase, this.getBookByIdUseCase)
-    : super(BookInitial()) {
+  BookDetailBloc(this.getBookDetailUseCase) : super(BookInitial()) {
     on<LoadBookDetailEvent>(_onLoadBookDetail);
     on<RefreshBookDetailEvent>(_onRefreshBookDetail);
 
@@ -148,13 +180,8 @@ class BookDetailBloc extends Bloc<BookEvent, BookState> {
     _currentBookId = event.bookId;
     emit(BookDetailLoading());
     try {
-      if (event.isUniqueId == true) {
-        final bookById = await getBookByIdUseCase(event.bookId.toString());
-        emit(BookDetailLoaded(bookById));
-      } else {
-        final bookDetail = await getBookDetailUseCase(event.bookId);
-        emit(BookDetailLoaded(bookDetail));
-      }
+      final bookDetail = await getBookDetailUseCase(event.bookId);
+      emit(BookDetailLoaded(bookDetail));
     } on DioException catch (e) {
       final error = ErrorHandler.getErrorMessage(e);
       emit(BookDetailFailure(error, e));

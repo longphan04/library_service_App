@@ -293,7 +293,10 @@ class _SearchAppBarState extends State<SearchAppBar> {
                 horizontal: 12,
                 vertical: 0,
               ),
-              suffixIcon: const Icon(Icons.search, color: AppColors.subText),
+              suffixIcon: GestureDetector(
+                onTap: () => _onSearchSubmitted(_controller.text),
+                child: const Icon(Icons.search, color: AppColors.subText),
+              ),
               suffixIconConstraints: const BoxConstraints(
                 minWidth: 40,
                 minHeight: 40,

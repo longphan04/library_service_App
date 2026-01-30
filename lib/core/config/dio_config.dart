@@ -4,7 +4,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 
 class DioConfig {
   static const String baseUrl =
-      'https://place-potentially-downloaded-lyrics.trycloudflare.com';
+      'https://surplus-comparison-aerospace-jpg.trycloudflare.com';
   static Dio createDio({CookieJar? cookieJar}) {
     final jar = cookieJar ?? CookieJar();
 

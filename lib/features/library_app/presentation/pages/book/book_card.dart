@@ -9,6 +9,7 @@ import 'detail_page.dart';
 class BookCard extends StatefulWidget {
   final Book book;
   final BookHold? bookHold;
+  final double? score;
   final bool isShelfMode;
   final bool isSelected;
   final void Function(bool)? onSelectionChanged;
@@ -17,6 +18,7 @@ class BookCard extends StatefulWidget {
     super.key,
     required this.book,
     this.bookHold,
+    this.score,
     this.isShelfMode = false,
     this.isSelected = false,
     this.onSelectionChanged,
@@ -40,7 +42,6 @@ class _BookCardState extends State<BookCard> {
             builder: (context) => DetailPage(
               bookId: widget.book.bookId,
               initialCoverUrl: widget.book.coverUrl ?? '',
-              isUniqueId: true,
             ),
           ),
         );
@@ -56,44 +57,80 @@ class _BookCardState extends State<BookCard> {
             // Image section
             Expanded(
               flex: widget.isShelfMode ? 5 : 2,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryButton,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    topRight: Radius.circular(10),
-                  ),
-                ),
-                child: widget.book.coverUrl != null
-                    ? ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10),
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.book.coverUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.buttonPrimaryText,
+              child: Stack(
+                children: [
+                  // Ảnh bìa full
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryButton,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: widget.book.coverUrl != null
+                          ? ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: widget.book.coverUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primaryButton,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(
+                                      Icons.broken_image,
+                                      color: AppColors.subText,
+                                    ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.book,
+                              size: 50,
+                              color: AppColors.subText,
                             ),
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            Icons.book,
-                            color: AppColors.buttonPrimaryText,
-                            size: 40,
-                          ),
+                    ),
+                  ),
+
+                  if (widget.score != null && widget.score! > 0)
+                    Positioned(
+                      bottom: 5,
+                      right: 5,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
                         ),
-                      )
-                    : Center(
-                        child: Icon(
-                          Icons.book,
-                          color: AppColors.buttonPrimaryText,
-                          size: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryButton.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amberAccent,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${(widget.score! * 100).toStringAsFixed(0)}%',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
+                ],
               ),
             ),
             // Info section

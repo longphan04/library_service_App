@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../widgets/my_button.dart';
 import 'register_page.dart';
+import 'forgot_password_page.dart';
 import '../../bloc/auth/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -164,7 +165,12 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Handle forgot password
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordPage(),
+                          ),
+                        );
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,

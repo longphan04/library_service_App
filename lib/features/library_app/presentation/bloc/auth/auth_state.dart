@@ -91,3 +91,41 @@ class LogoutSuccess extends AuthState {
   @override
   List<Object?> get props => [];
 }
+
+class ForgotPasswordLoading extends AuthState {
+  @override
+  List<Object?> get props => [];
+}
+
+class ForgotPasswordSuccess extends AuthState {
+  @override
+  List<Object?> get props => [];
+}
+
+class ForgotPasswordFailure extends AuthState {
+  final String message;
+  final dynamic error;
+  const ForgotPasswordFailure(this.message, this.error);
+
+  @override
+  List<Object?> get props => [message, error];
+}
+
+class ChangePasswordLoading extends AuthState {
+  @override
+  List<Object?> get props => [];
+}
+
+class ChangePasswordSuccess extends AuthState {
+  @override
+  List<Object?> get props => [];
+}
+
+class ChangePasswordFailure extends AuthState {
+  final String message;
+  final dynamic error;
+  const ChangePasswordFailure(this.message, this.error);
+
+  @override
+  List<Object?> get props => [message, error];
+}

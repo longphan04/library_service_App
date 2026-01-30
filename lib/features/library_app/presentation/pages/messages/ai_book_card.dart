@@ -31,7 +31,7 @@ class AIBookCard extends StatelessWidget {
             Text(
               source.title,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),

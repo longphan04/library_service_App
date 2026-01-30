@@ -7,6 +7,14 @@ abstract class BookEvent extends Equatable {
 }
 
 // ================== EVENTS CHO LIST / SEARCH / FILTER ==================
+class LoadBooksByIdEvent extends BookEvent {
+  final List<String> ids;
+
+  const LoadBooksByIdEvent(this.ids);
+
+  @override
+  List<Object?> get props => [ids];
+}
 
 class LoadBooksEvent extends BookEvent {
   final int page;
@@ -42,11 +50,10 @@ class RefreshBooksEvent extends BookEvent {
 
 class LoadBookDetailEvent extends BookEvent {
   final int bookId;
-  final bool? isUniqueId;
-  const LoadBookDetailEvent(this.bookId, {this.isUniqueId});
+  const LoadBookDetailEvent(this.bookId);
 
   @override
-  List<Object?> get props => [bookId, isUniqueId];
+  List<Object?> get props => [bookId];
 }
 
 class RefreshBookDetailEvent extends BookEvent {

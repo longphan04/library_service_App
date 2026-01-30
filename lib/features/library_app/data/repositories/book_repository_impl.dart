@@ -9,10 +9,10 @@ class BookRepositoryImpl implements BookRepository {
   BookRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Book> getBookById(String id) async {
+  Future<List<Book>> getBooksById(List<String> ids) async {
     try {
-      final bookModel = await remoteDataSource.getBookById(id);
-      return bookModel.toEntity();
+      final bookModel = await remoteDataSource.getBooksById(ids);
+      return bookModel.data.map((model) => model.toEntity()).toList();
     } catch (e) {
       rethrow;
     }

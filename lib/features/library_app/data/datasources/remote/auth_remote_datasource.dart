@@ -8,6 +8,8 @@ abstract class AuthRemoteDatasource {
   Future<LoginResponseModel> login(LoginRequestModel request);
   Future<void> register(RegisterRequestModel request);
   Future<void> verifyOtp(VerifyEmailOtpModel request);
+  Future<void> forgotPassword(String email);
+  Future<String> changePassword(String currentPassword, String newPassword);
   Future<void> logout();
 }
 
@@ -99,6 +101,54 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
           type: DioExceptionType.badResponse,
         );
       }
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    try {
+      final response = await dio.post(
+        '/auth/forgot-password',
+        data: {'email': email},
+        options: Options(
+          extra: const {'requiresAuth': false, 'skipRefresh': true},
+        ),
+      );
+
+      if (response.statusCode! >= 400) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
+      }
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      final response = await dio.patch(
+        '/auth/change-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+
+      if (response.statusCode! >= 400) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
+      }
+
+      return response.data['accessToken'] as String;
     } on DioException {
       rethrow;
     }

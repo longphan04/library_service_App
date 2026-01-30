@@ -4,9 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/di/service_locator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/ai_book_source.dart';
+import '../../bloc/book/book_bloc.dart';
 import '../../bloc/message/ai_chat_bloc.dart';
-import '../book/detail_page.dart';
-import 'ai_book_card.dart';
+import '../book/book_card.dart';
 
 class AIChatPage extends StatefulWidget {
   const AIChatPage({super.key});
@@ -251,8 +251,6 @@ class _MessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isUser
                         ? AppColors.secondaryButton
-                        : isError
-                        ? Colors.red.shade50
                         : AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
@@ -264,9 +262,11 @@ class _MessageBubble extends StatelessWidget {
                     ],
                   ),
                   child: SelectableText(
-                    message,
+                    isError
+                        ? 'Hệ thống đang bận. Vui lòng thử lại sau.'
+                        : message,
                     style: TextStyle(
-                      color: isError ? Colors.red.shade700 : AppColors.bodyText,
+                      color: AppColors.bodyText,
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                     ),
@@ -275,50 +275,11 @@ class _MessageBubble extends StatelessWidget {
               ),
             ],
           ),
-          // Display book sources if available
           if (!isUser && sources.isNotEmpty && !isStreaming) ...[
             const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: Text(
-                'Sách liên quan:',
-                style: TextStyle(
-                  color: AppColors.subText,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: sources.length,
-              itemBuilder: (context, index) {
-                final source = sources[index];
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: index == 0 ? 0 : 8,
-                    right: index == sources.length - 1 ? 0 : 0,
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailPage(
-                            bookId: int.parse(source.identifier),
-                            initialCoverUrl: null,
-                          ),
-                        ),
-                      );
-                    },
-                    child: SizedBox(
-                      width: 160,
-                      child: AIBookCard(source: source),
-                    ),
-                  ),
-                );
-              },
+            _RelatedBookList(
+              bookIds: sources.map((s) => s.identifier).toList(),
+              score: sources.map((s) => s.score).toList(),
             ),
           ],
         ],
@@ -453,6 +414,84 @@ class _TypingIndicatorState extends State<TypingIndicator>
         const SizedBox(width: 4),
         _buildDot(const Interval(0.66, 1.0, curve: Curves.easeInOut)),
       ],
+    );
+  }
+}
+
+class _RelatedBookList extends StatelessWidget {
+  final List<String> bookIds;
+  final List<double> score;
+
+  const _RelatedBookList({required this.bookIds, required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          getIt<BookAIBloc>()..add(LoadBooksByIdEvent(bookIds)),
+      child: BlocBuilder<BookAIBloc, BookState>(
+        builder: (context, state) {
+          if (state is ListBooksLoading) {
+            return const SizedBox(
+              height: 120,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            );
+          }
+
+          if (state is ListBooksLoaded) {
+            if (state.books.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text(
+                    'Sách liên quan:',
+                    style: TextStyle(
+                      color: AppColors.subText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 360,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.books.length,
+                    itemBuilder: (context, index) {
+                      final book = state.books[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: index == 0 ? 0 : 12,
+                          right: index == state.books.length - 1 ? 0 : 0,
+                          bottom: 4,
+                        ),
+                        child: SizedBox(
+                          width: 180,
+                          child: BookCard(
+                            book: book,
+                            isShelfMode: false,
+                            score: score[index],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }
+
+          if (state is ListBooksFailure) {
+            // Có thể ẩn đi hoặc hiện icon lỗi nhỏ nếu muốn
+            return const SizedBox.shrink();
+          }
+
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }

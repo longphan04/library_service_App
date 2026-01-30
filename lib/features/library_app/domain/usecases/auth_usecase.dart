@@ -73,3 +73,23 @@ class GetUserDataUseCase {
     return await repository.getUserData();
   }
 }
+
+class ForgotPasswordUseCase {
+  final AuthRepository repository;
+
+  ForgotPasswordUseCase(this.repository);
+
+  Future<void> call(String email) async {
+    return await repository.forgotPassword(email);
+  }
+}
+
+class ChangePasswordUseCase {
+  final AuthRepository repository;
+
+  ChangePasswordUseCase(this.repository);
+
+  Future<String> call(String currentPassword, String newPassword) async {
+    return await repository.changePassword(currentPassword, newPassword);
+  }
+}

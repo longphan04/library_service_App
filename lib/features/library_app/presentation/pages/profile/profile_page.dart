@@ -8,6 +8,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../bloc/profile/profile_bloc.dart';
 import '../../widgets/my_button.dart';
 import '../../../domain/entities/profile.dart';
+import '../auth/change_password_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final Profile? profile;
@@ -435,6 +436,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: _isUpdating || profileState is ProfileLoading
                         ? null
                         : _submit,
+                  ),
+                  const SizedBox(height: 12),
+                  MyButton(
+                    text: 'Đổi mật khẩu',
+                    isReversedColor: true,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChangePasswordPage(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                 ],

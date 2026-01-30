@@ -4,7 +4,7 @@ import '../../models/book_model.dart';
 import '../../models/pagination_model.dart';
 
 abstract class BookRemoteDatasource {
-  Future<BookModel> getBookById(String id);
+  Future<BooksListModel> getBooksById(List<String> ids);
   Future<BookModel> getBookDetails(int bookId);
   Future<BooksListModel> getAllBooks({
     String? query,
@@ -23,9 +23,9 @@ class BookRemoteDatasourceImpl implements BookRemoteDatasource {
   BookRemoteDatasourceImpl({required this.dio});
 
   @override
-  Future<BookModel> getBookById(String id) async {
+  Future<BooksListModel> getBooksById(List<String> ids) async {
     try {
-      final response = await dio.get('/book/identifier/$id');
+      final response = await dio.post('/book/identifier', data: {'ids': ids});
 
       if (response.statusCode! >= 400) {
         throw DioException(
@@ -34,8 +34,22 @@ class BookRemoteDatasourceImpl implements BookRemoteDatasource {
           type: DioExceptionType.badResponse,
         );
       }
-      final model = BookModel.fromJson(response.data);
-      return model;
+
+      // API /book/identifier không trả về pagination, tự tạo
+      final List<dynamic> booksData = response.data['data'] ?? [];
+      final List<BookModel> books = booksData
+          .map((bookJson) => BookModel.fromJson(bookJson))
+          .toList();
+
+      final pagination = PaginationModel(
+        totalPages: 1,
+        totalItems: books.length,
+        page: 1,
+        limit: books.length,
+        hasNext: false,
+      );
+
+      return BooksListModel(data: books, pagination: pagination);
     } on DioException {
       rethrow;
     }
